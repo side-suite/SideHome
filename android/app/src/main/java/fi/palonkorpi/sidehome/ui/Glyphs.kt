@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
+import fi.palonkorpi.sidehome.i18n.tr
 
 /**
  * Real Iconoir (MIT) thin-line glyphs — the actual path data from the icon set, each drawn
@@ -532,17 +533,19 @@ private val GLYPHS: Map<String, List<Prim>> = mapOf(
 /** A named group of glyph keys for the icon picker. */
 data class IconCategory(val name: String, val keys: List<String>)
 
-/** Glyphs offered in the icon picker, grouped by category (excludes UI-only search/chevron). */
-val ICON_CATEGORIES: List<IconCategory> = listOf(
-    IconCategory("Basics", listOf("app", "folder", "star", "heart", "bookmark", "pin", "check", "home")),
-    IconCategory("Communication", listOf("chat", "messages", "mail", "mailopen", "send", "phone", "bell", "megaphone", "user", "group", "community")),
-    IconCategory("Media", listOf("camera", "photo", "video", "movie", "music", "play", "sound", "headset", "mic", "tv", "gamepad")),
-    IconCategory("Productivity", listOf("note", "notes", "pageedit", "list", "calendar", "clock", "checkcircle", "archive", "printer", "attachment", "folderplus", "book", "books", "pencil", "sliders", "settings")),
-    IconCategory("Money", listOf("bank", "card", "wallet", "coins", "dollar", "cash", "bag", "cart", "gift", "safe")),
-    IconCategory("Places & travel", listOf("map", "compass", "car", "airplane", "globe", "building", "walk", "bike")),
-    IconCategory("System", listOf("lock", "shield", "wifi", "bluetooth", "wrench", "trash", "download", "upload", "computer", "internet")),
-    IconCategory("Nature", listOf("sun", "moon", "cloud", "snow", "flash", "leaf", "fire")),
-    IconCategory("Life", listOf("trophy", "coffee", "cutlery", "pizza", "glass", "gym", "dice")),
+/** Glyphs offered in the icon picker, grouped by category (excludes UI-only search/chevron).
+ *  A `get()` property, not a stored list: the names go through [tr], so a language change at
+ *  runtime must re-resolve them. */
+val ICON_CATEGORIES: List<IconCategory> get() = listOf(
+    IconCategory(tr("Basics", "Grundlagen"), listOf("app", "folder", "star", "heart", "bookmark", "pin", "check", "home")),
+    IconCategory(tr("Communication", "Kommunikation"), listOf("chat", "messages", "mail", "mailopen", "send", "phone", "bell", "megaphone", "user", "group", "community")),
+    IconCategory(tr("Media", "Medien"), listOf("camera", "photo", "video", "movie", "music", "play", "sound", "headset", "mic", "tv", "gamepad")),
+    IconCategory(tr("Productivity", "Produktivität"), listOf("note", "notes", "pageedit", "list", "calendar", "clock", "checkcircle", "archive", "printer", "attachment", "folderplus", "book", "books", "pencil", "sliders", "settings")),
+    IconCategory(tr("Money", "Finanzen"), listOf("bank", "card", "wallet", "coins", "dollar", "cash", "bag", "cart", "gift", "safe")),
+    IconCategory(tr("Places & travel", "Orte & Reisen"), listOf("map", "compass", "car", "airplane", "globe", "building", "walk", "bike")),
+    IconCategory(tr("System", "System"), listOf("lock", "shield", "wifi", "bluetooth", "wrench", "trash", "download", "upload", "computer", "internet")),
+    IconCategory(tr("Nature", "Natur"), listOf("sun", "moon", "cloud", "snow", "flash", "leaf", "fire")),
+    IconCategory(tr("Life", "Alltag"), listOf("trophy", "coffee", "cutlery", "pizza", "glass", "gym", "dice")),
 )
 
 /** Flattened choice list (kept for any callers that want a simple list). */

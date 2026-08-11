@@ -1,5 +1,6 @@
 package fi.palonkorpi.sidehome.ui
 
+import fi.palonkorpi.sidehome.i18n.tr
 import android.app.Activity
 import android.content.Intent
 import android.content.res.Configuration
@@ -197,6 +198,9 @@ fun SideHomeApp(
     var apps by remember { mutableStateOf<List<AppEntry>>(emptyList()) }
     val appsByKey = remember(apps) { apps.associateBy { it.key } }
     var home by remember { mutableStateOf<List<HomeItem>>(emptyList()) }
+    // Hidden apps: the keys hidden from the library. Null until the first read, so the
+    // change-detecting effect below can tell "first load" from "changed in settings".
+    var hiddenKeys by remember { mutableStateOf<Set<String>?>(null) }
 
     // Sandbox mode (dev): the home is reading a scratch key, so placement gestures can be tried on
     // throwaway tiles. Mirrors repo.sandbox rather than owning it — the repo's copy is the one that
@@ -709,6 +713,17 @@ fun SideHomeApp(
         val wasCovered = fullyCovered
         resetToBareHome()
         if (!wasCovered) enterTick += 1
+    }
+
+    // Hidden apps: re-read on every home reveal and drawer open, so hiding an app on the
+    // settings screen reaches the live launcher without a relaunch. A change also re-loads the home
+    // — setHidden already stripped the hidden app's tile there, this picks the stripped list up.
+    LaunchedEffect(enterTick, drawerActive) {
+        val fresh = withContext(Dispatchers.IO) { repo.hiddenAppKeys() }
+        if (hiddenKeys != null && fresh != hiddenKeys) {
+            home = repo.loadHome().pruneMissing(apps.map { it.key }.toSet())
+        }
+        hiddenKeys = fresh
     }
 
     // ---- HOME key: step the overlay stack back toward bare home, else open the drawer ----
@@ -1477,9 +1492,16 @@ fun SideHomeApp(
                             .graphicsLayer { alpha = drawerFrac },
                     )
                 }
+                // Hidden apps leave the library entirely: the drawer gets the visible list, and
+                // the hidden ones ride along separately for the locked row at the list's end.
+                val hidden = hiddenKeys.orEmpty()
+                val visibleApps = remember(apps, hidden) { apps.filterNot { it.key in hidden } }
+                val hiddenAppsList = remember(apps, hidden) { apps.filter { it.key in hidden } }
                 Drawer(
-                    apps = apps,
+                    apps = visibleApps,
                     favouriteKeys = home.placedKeys(),
+                    hiddenApps = hiddenAppsList,
+                    onVerifyHiddenPin = { repo.verifyHiddenPin(it) },
                     fg = fg,
                     accent = accent,
                     // The fill the drawer actually floats on (the sibling Box just above), so
@@ -1621,7 +1643,7 @@ fun SideHomeApp(
             confirmRemoveFolder?.let { prompt ->
                 ConfirmModal(
                     message = removeFolderMessage(prompt.name),
-                    confirmLabel = "Remove",
+                    confirmLabel = tr("Remove", "Entfernen"),
                     fg = fg,
                     accent = accent,
                     panelColor = menuColor,
@@ -1662,7 +1684,7 @@ fun SideHomeApp(
                 Box(Modifier.fillMaxSize()) {
                     OverlayBackdrop(color = backdropColor, photo = photoOverlayBake, modifier = Modifier.fillMaxSize())
                     IconPicker(
-                        title = "Change icon",
+                        title = tr("Change icon", "Symbol ändern"),
                         current = glyphFor(app),
                         fg = fg,
                         accent = accent,
@@ -1718,7 +1740,7 @@ fun SideHomeApp(
                     Box(Modifier.fillMaxSize()) {
                         OverlayBackdrop(color = backdropColor, photo = photoOverlayBake, modifier = Modifier.fillMaxSize())
                         IconPicker(
-                            title = "Folder icon",
+                            title = tr("Folder icon", "Ordner-Symbol"),
                             current = folder.glyph,
                             fg = fg,
                             accent = accent,

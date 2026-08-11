@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import fi.palonkorpi.sidehome.settings.SettingsStore
 import fi.palonkorpi.sidehome.settings.tempUnitAsState
 import fi.palonkorpi.sidehome.settings.weatherEnabledAsState
+import fi.palonkorpi.sidehome.settings.weatherPlace2AsState
 import fi.palonkorpi.sidehome.settings.weatherPlaceAsState
 
 /**
@@ -44,10 +45,12 @@ fun WeatherSettingsSection(
     settings: SettingsStore,
     fg: Color,
     accent: Color,
-    onEditLocation: () -> Unit,
+    // Opens the city composer for the given slot: 0 = primary place, 1 = the optional second city.
+    onEditLocation: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val place by settings.weatherPlaceAsState()
+    val place2 by settings.weatherPlace2AsState()
     val unit by settings.tempUnitAsState()
     val enabled by settings.weatherEnabledAsState()
 
@@ -75,7 +78,7 @@ fun WeatherSettingsSection(
                 Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(10.dp))
-                    .clickable(onClick = onEditLocation)
+                    .clickable { onEditLocation(0) }
                     .padding(vertical = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
@@ -88,6 +91,28 @@ fun WeatherSettingsSection(
                     color = if (place != null) accent else fg.copy(alpha = 0.7f),
                     fontSize = 15.sp,
                     fontWeight = if (place != null) FontWeight.SemiBold else FontWeight.Normal,
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // The optional second city: the Future pane grows a switcher as soon as this is set,
+            // and loses it again when the composer's remove row clears it.
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .clickable { onEditLocation(1) }
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(tr("Second place", "Zweiter Ort"), color = fg, fontSize = 17.sp)
+                Text(
+                    place2?.name ?: tr("Optional — tap to choose", "Optional — antippen"),
+                    color = if (place2 != null) accent else fg.copy(alpha = 0.7f),
+                    fontSize = 15.sp,
+                    fontWeight = if (place2 != null) FontWeight.SemiBold else FontWeight.Normal,
                 )
             }
 

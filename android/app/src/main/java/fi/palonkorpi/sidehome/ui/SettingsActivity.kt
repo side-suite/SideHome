@@ -104,7 +104,8 @@ private fun SettingsScreen(settings: SettingsStore) {
     // SID-35's §4a location mirror. The composer *replaces* the settings column rather than floating
     // over it: this screen has no recede-by-blur machinery of its own, and a modal that just sat on
     // top of a live list would be the one overlay in the launcher that doesn't push its host back.
-    var cityComposerOpen by remember { mutableStateOf(false) }
+    // Null = closed; 0/1 = which weather place the composer is editing.
+    var cityComposerSlot by remember { mutableStateOf<Int?>(null) }
     val weatherStore = rememberWeatherStore()
 
     // This Activity is its own composition, outside the launcher root that sets these — so without
@@ -121,13 +122,15 @@ private fun SettingsScreen(settings: SettingsStore) {
     ) {
         AmbientBackground(mood = mood, modifier = Modifier.fillMaxSize())
 
-        if (cityComposerOpen) {
+        val composerSlot = cityComposerSlot
+        if (composerSlot != null) {
             CityComposer(
                 settings = settings,
                 store = weatherStore,
                 fg = fg,
                 accent = accent,
-                onDismiss = { cityComposerOpen = false },
+                onDismiss = { cityComposerSlot = null },
+                slot = composerSlot,
             )
         } else {
             Column(
@@ -209,7 +212,7 @@ private fun SettingsScreen(settings: SettingsStore) {
                     settings = settings,
                     fg = fg,
                     accent = accent,
-                    onEditLocation = { cityComposerOpen = true },
+                    onEditLocation = { cityComposerSlot = it },
                 )
 
                 Spacer(Modifier.height(28.dp))

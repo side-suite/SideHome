@@ -140,6 +140,45 @@ class AppRepository(private val context: Context) {
         writeKvSet(KEY_CATEGORY_OVERRIDES, current)
     }
 
+    // ---- hidden apps (password-locked hidden area) ----
+
+    /** The app keys the user has hidden from the library. Empty set = feature dormant. */
+    fun hiddenAppKeys(): Set<String> =
+        prefs.getStringSet(KEY_HIDDEN_APPS, emptySet())?.toSet() ?: emptySet()
+
+    /**
+     * Hide or unhide one app. Hiding also removes it from the home — a tile on the front page of a
+     * launcher is the opposite of hidden — and dissolves any folder that emptied, the same lifecycle
+     * rule an uninstall follows (SID-31). Unhiding restores nothing: the app rejoins the library
+     * list and can be placed again by hand.
+     */
+    fun setHidden(key: String, hidden: Boolean) {
+        val current = hiddenAppKeys().toMutableSet()
+        if (hidden) current.add(key) else current.remove(key)
+        prefs.edit().putStringSet(KEY_HIDDEN_APPS, current).apply()
+        if (hidden) {
+            val stripped = loadHome().mapNotNull { item ->
+                when (item) {
+                    is AppItem -> item.takeIf { it.key != key }
+                    is FolderItem -> item.copy(appKeys = item.appKeys.filterNot { it == key })
+                        .takeIf { it.appKeys.isNotEmpty() }
+                }
+            }
+            saveHome(stripped)
+        }
+    }
+
+    /** Whether a password for the hidden area has been set. Managing hidden apps requires one. */
+    fun hasHiddenPin(): Boolean = !prefs.getString(KEY_HIDDEN_PIN, null).isNullOrBlank()
+
+    /** Set (or change) the hidden-area password. Stored as a salted SHA-256 hash, never plain. */
+    fun setHiddenPin(pin: String) =
+        prefs.edit().putString(KEY_HIDDEN_PIN, hashHiddenPin(pin)).apply()
+
+    /** Check a typed password against the stored hash. False when none is set. */
+    fun verifyHiddenPin(pin: String): Boolean =
+        prefs.getString(KEY_HIDDEN_PIN, null)?.equals(hashHiddenPin(pin)) == true
+
     // ---- user-defined categories (SID-61) ----
 
     /**
@@ -298,6 +337,8 @@ class AppRepository(private val context: Context) {
         private const val KEY_CATEGORY_OVERRIDES = "category_overrides"
         private const val KEY_USER_CATEGORIES = "user_categories"       // SID-61: user-made buckets
         private const val KEY_USER_CATEGORY_SEQ = "user_category_seq"   // monotonic id counter
+        private const val KEY_HIDDEN_APPS = "hidden_apps"      // hidden area (app keys)
+        private const val KEY_HIDDEN_PIN = "hidden_pin_hash"    // SHA-256 of the password
         private const val KEY_FAVS = "favourites"       // legacy (pre-folders)
         private const val KEY_HOME = "home_v2"
         private const val KEY_HOME_SANDBOX = "home_sandbox"   // dev-only scratch home

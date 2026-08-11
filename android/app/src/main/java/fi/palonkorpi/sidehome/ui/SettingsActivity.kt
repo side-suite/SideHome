@@ -46,6 +46,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import fi.palonkorpi.sidehome.ambient.accentColor
+import fi.palonkorpi.sidehome.apps.AppRepository
 import fi.palonkorpi.sidehome.ambient.DEFAULT_LATITUDE
 import fi.palonkorpi.sidehome.ambient.computeMood
 import fi.palonkorpi.sidehome.ambient.foregroundInk
@@ -107,6 +108,12 @@ private fun SettingsScreen(settings: SettingsStore) {
     var cityComposerOpen by remember { mutableStateOf(false) }
     val weatherStore = rememberWeatherStore()
 
+    // Hidden apps: which of the hidden-area sub-surfaces is up (password, gate, manage list);
+    // null = the plain settings column. Swapped in exactly like the city composer.
+    var hiddenSub by remember { mutableStateOf<HiddenSub?>(null) }
+    val context = LocalContext.current
+    val repo = remember(context.applicationContext) { AppRepository(context.applicationContext) }
+
     // This Activity is its own composition, outside the launcher root that sets these — so without
     // re-providing them the rows ripple (default indication) and render in the platform font instead
     // of the launcher's Inter. Match the home so Settings reads as part of the launcher.
@@ -121,6 +128,7 @@ private fun SettingsScreen(settings: SettingsStore) {
     ) {
         AmbientBackground(mood = mood, modifier = Modifier.fillMaxSize())
 
+        val hiddenSubNow = hiddenSub
         if (cityComposerOpen) {
             CityComposer(
                 settings = settings,
@@ -128,6 +136,15 @@ private fun SettingsScreen(settings: SettingsStore) {
                 fg = fg,
                 accent = accent,
                 onDismiss = { cityComposerOpen = false },
+            )
+        } else if (hiddenSubNow != null) {
+            HiddenAppsSubScreen(
+                repo = repo,
+                sub = hiddenSubNow,
+                fg = fg,
+                accent = accent,
+                onChange = { hiddenSub = it },
+                onClose = { hiddenSub = null },
             )
         } else {
             Column(
@@ -210,6 +227,14 @@ private fun SettingsScreen(settings: SettingsStore) {
                     fg = fg,
                     accent = accent,
                     onEditLocation = { cityComposerOpen = true },
+                )
+
+                Spacer(Modifier.height(28.dp))
+                HiddenAppsSection(
+                    repo = repo,
+                    fg = fg,
+                    accent = accent,
+                    onOpen = { hiddenSub = it },
                 )
 
                 Spacer(Modifier.height(28.dp))

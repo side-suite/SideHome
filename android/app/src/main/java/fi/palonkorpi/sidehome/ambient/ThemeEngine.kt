@@ -2,6 +2,7 @@ package fi.palonkorpi.sidehome.ambient
 
 import fi.palonkorpi.sidehome.color.Lch
 import fi.palonkorpi.sidehome.color.hexToLch
+import fi.palonkorpi.sidehome.i18n.tr
 
 /**
  * The home's four v1 themes (SPEC.md §6). Every theme is a *parameter variant of the one ambient
@@ -35,12 +36,12 @@ enum class Theme { AMBIENT, FULL_LIGHT, FULL_DARK, EDGE_DARK, CUSTOM, PHOTO }
 /** The theme's human label, shown under its tile in the zoom-out chooser. */
 val Theme.displayName: String
     get() = when (this) {
-        Theme.AMBIENT -> "Ambient"
-        Theme.FULL_LIGHT -> "Full light"
-        Theme.FULL_DARK -> "Full dark"
-        Theme.EDGE_DARK -> "Edge"
-        Theme.CUSTOM -> "Custom"
-        Theme.PHOTO -> "Photo"
+        Theme.AMBIENT -> tr("Ambient", "Ambient")
+        Theme.FULL_LIGHT -> tr("Full light", "Hell")
+        Theme.FULL_DARK -> tr("Full dark", "Dunkel")
+        Theme.EDGE_DARK -> tr("Edge", "Edge")
+        Theme.CUSTOM -> tr("Custom", "Eigenes")
+        Theme.PHOTO -> tr("Photo", "Foto")
     }
 
 /** The Custom theme's default seed hue (degrees), until the user picks one. A warm amber, clearly

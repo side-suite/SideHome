@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import fi.palonkorpi.sidehome.i18n.tr
 import kotlin.math.roundToInt
 
 // ---- pure logic (Compose-free, so it can be unit-tested) ------------------------------------
@@ -59,15 +60,20 @@ enum class ActionTarget { LIBRARY_APP, HOME_APP, HOME_FOLDER, FOLDER_MEMBER }
  * One cell of the strip: a glyph over a tiny label. Labels are single words — five cells have to
  * stay one clean row on a 376dp-wide screen, and a wrapped label would break the row's height.
  */
-enum class StripAction(val label: String, val glyph: String) {
-    CHANGE_ICON("Icon", "pencil"),
-    RENAME("Rename", "pageedit"),
-    ADD_HOME("Home", "home"),
-    ADD_FOLDER("Folder", "folderplus"),
-    CATEGORY("Category", "list"),
-    MOVE("Move", "pin"),
-    REMOVE("Remove", "trash"),
-    APP_INFO("Info", "settings"),
+enum class StripAction(private val labelEn: String, private val labelDe: String, val glyph: String) {
+    CHANGE_ICON("Icon", "Symbol", "pencil"),
+    RENAME("Rename", "Name", "pageedit"),
+    ADD_HOME("Home", "Home", "home"),
+    ADD_FOLDER("Folder", "Ordner", "folderplus"),
+    CATEGORY("Category", "Kategorie", "list"),
+    MOVE("Move", "Bewegen", "pin"),
+    REMOVE("Remove", "Entfernen", "trash"),
+    APP_INFO("Info", "Info", "settings"),
+    ;
+
+    // A `get()` rather than a constructor-time value: enum constants are built once at class load,
+    // and a frozen label would ignore a language change for the rest of the process.
+    val label: String get() = tr(labelEn, labelDe)
 }
 
 /** The strip is one row of side-by-side cells, so no variant may exceed this (SID-28). */
@@ -342,7 +348,7 @@ fun RenamePopover(
             )
             Spacer(Modifier.width(10.dp))
             Text(
-                "Done", color = accent, fontSize = 15.sp, fontWeight = FontWeight.Bold,
+                tr("Done", "Fertig"), color = accent, fontSize = 15.sp, fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .clickable { onCommit(text.text) }

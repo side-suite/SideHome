@@ -1,5 +1,6 @@
 package fi.palonkorpi.sidehome.weather
 
+import fi.palonkorpi.sidehome.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,7 +52,7 @@ fun WeatherSettingsSection(
     val enabled by settings.weatherEnabledAsState()
 
     Column(modifier) {
-        Text("Weather", color = fg, fontWeight = FontWeight.Light, fontSize = 22.sp)
+        Text(tr("Weather", "Wetter"), color = fg, fontWeight = FontWeight.Light, fontSize = 22.sp)
         Spacer(Modifier.height(14.dp))
 
         // SID-181: the master switch. Off removes the weather from the launcher — the home's glance
@@ -63,7 +64,7 @@ fun WeatherSettingsSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Show weather", color = fg, fontSize = 17.sp)
+            Text(tr("Show weather", "Wetter anzeigen"), color = fg, fontSize = 17.sp)
             OnOffToggle(selected = enabled, fg = fg, accent = accent, onSelect = { settings.weatherEnabled = it })
         }
 
@@ -79,11 +80,11 @@ fun WeatherSettingsSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Location", color = fg, fontSize = 17.sp)
+                Text(tr("Location", "Ort"), color = fg, fontSize = 17.sp)
                 // Accent when set, plain when not: the same "this is live" mark the notification-dots
                 // row uses for its granted state, so the settings screen has one vocabulary and not two.
                 Text(
-                    place?.name ?: "Not set — tap to choose",
+                    place?.name ?: tr("Not set — tap to choose", "Nicht gesetzt — antippen"),
                     color = if (place != null) accent else fg.copy(alpha = 0.7f),
                     fontSize = 15.sp,
                     fontWeight = if (place != null) FontWeight.SemiBold else FontWeight.Normal,
@@ -92,8 +93,12 @@ fun WeatherSettingsSection(
 
             Spacer(Modifier.height(6.dp))
             Text(
+                tr(
                 "Typed, not sensed: SideHome asks Open-Meteo for the coordinates of a place you name, " +
                     "and never asks Android where you are.",
+                "Getippt statt geortet: SideHome fragt Open-Meteo nach den Koordinaten eines Ortes, " +
+                    "den du nennst — und fragt Android nie, wo du bist.",
+            ),
                 color = fg.copy(alpha = 0.85f),
                 fontSize = 13.sp,
                 lineHeight = 17.sp,
@@ -106,7 +111,7 @@ fun WeatherSettingsSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Temperature", color = fg, fontSize = 17.sp)
+                Text(tr("Temperature", "Temperatur"), color = fg, fontSize = 17.sp)
                 UnitToggle(selected = unit, fg = fg, accent = accent, onSelect = { settings.tempUnit = it })
             }
         }
@@ -126,7 +131,7 @@ private fun OnOffToggle(
             .clip(RoundedCornerShape(10.dp))
             .background(fg.copy(alpha = 0.08f)),
     ) {
-        listOf("Off" to false, "On" to true).forEach { (text, value) ->
+        listOf(tr("Off", "Aus") to false, tr("On", "An") to true).forEach { (text, value) ->
             val isSelected = value == selected
             Box(
                 Modifier

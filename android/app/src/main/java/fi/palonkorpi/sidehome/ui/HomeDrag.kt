@@ -36,6 +36,7 @@ import fi.palonkorpi.sidehome.apps.Category
 import fi.palonkorpi.sidehome.apps.AppItem
 import fi.palonkorpi.sidehome.apps.HomeItem
 import fi.palonkorpi.sidehome.apps.combineIntoFolder
+import fi.palonkorpi.sidehome.i18n.tr
 import fi.palonkorpi.sidehome.apps.moveIndex
 import fi.palonkorpi.sidehome.apps.nestIntoFolder
 import fi.palonkorpi.sidehome.apps.placedKeys
@@ -559,7 +560,7 @@ private fun RemovePill(
         )
         Spacer(Modifier.width(8.dp))
         Text(
-            text = "Remove",
+            text = tr("Remove", "Entfernen"),
             color = if (active) accent else fg,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,

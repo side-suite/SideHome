@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import fi.palonkorpi.sidehome.apps.BuiltInCategory
 import fi.palonkorpi.sidehome.apps.Category
+import fi.palonkorpi.sidehome.i18n.tr
 
 // ---- pure logic (Compose-free, so it can be unit-tested) ------------------------------------
 
@@ -109,7 +110,7 @@ fun CategoryPicker(
         // rows aren't composed behind it — the "stacked overlays don't bleed" rule, for free.
         if (pickingGlyph) {
             IconPicker(
-                title = "Category icon",
+                title = tr("Category icon", "Kategorie-Symbol"),
                 current = newGlyph,
                 fg = fg,
                 accent = accent,
@@ -130,7 +131,7 @@ fun CategoryPicker(
                 .padding(top = 36.dp)
                 .padding(start = 28.dp, end = 18.dp, bottom = 12.dp),
         ) {
-            CategoryPickerHeader("Category", fg, accent, onClose)
+            CategoryPickerHeader(tr("Category", "Kategorie"), fg, accent, onClose)
             Spacer(Modifier.height(10.dp))
             LazyColumn {
                 items(categories, key = { it.id }) { cat ->
@@ -154,7 +155,7 @@ fun CategoryPicker(
                         // override produced it, so it can't honestly claim this is the standing state.
                         CategoryRow(
                             glyph = "app",
-                            label = "Use the suggestion",
+                            label = tr("Use the suggestion", "Vorschlag übernehmen"),
                             current = false,
                             fg = fg,
                             accent = accent,
@@ -162,7 +163,7 @@ fun CategoryPicker(
                         )
                         CategoryRow(
                             glyph = "folderplus",
-                            label = "New category…",
+                            label = tr("New category…", "Neue Kategorie…"),
                             current = false,
                             fg = fg,
                             accent = accent,
@@ -204,7 +205,7 @@ private fun CategoryPickerHeader(title: String, fg: Color, accent: Color, onClos
         Text(title, color = fg, fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.weight(1f))
         Text(
-            "Done", color = accent, fontSize = 16.sp, fontWeight = FontWeight.Bold,
+            tr("Done", "Fertig"), color = accent, fontSize = 16.sp, fontWeight = FontWeight.Bold,
             modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onClose() }.padding(4.dp),
         )
     }
@@ -309,7 +310,7 @@ private fun NewCategorySheet(
                 decorationBox = { inner ->
                     Box(contentAlignment = Alignment.CenterStart) {
                         if (name.text.isEmpty()) {
-                            Text("New category", color = fg.copy(alpha = 0.4f), fontSize = 18.sp)
+                            Text(tr("New category", "Neue Kategorie"), color = fg.copy(alpha = 0.4f), fontSize = 18.sp)
                         }
                         inner()
                     }
@@ -321,7 +322,7 @@ private fun NewCategorySheet(
             )
             Spacer(Modifier.width(10.dp))
             Text(
-                "Create", color = accent, fontSize = 15.sp, fontWeight = FontWeight.Bold,
+                tr("Create", "Erstellen"), color = accent, fontSize = 15.sp, fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .clickable { onCreate() }

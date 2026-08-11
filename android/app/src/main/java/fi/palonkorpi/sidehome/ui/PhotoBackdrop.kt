@@ -27,6 +27,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import fi.palonkorpi.sidehome.i18n.tr
 import fi.palonkorpi.sidehome.photo.PhotoBake
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -112,7 +113,7 @@ fun RebakeChip(fg: Color, accent: Color, panelColor: Color, modifier: Modifier =
             strokeWidth = 1.5.dp,
         )
         Spacer(Modifier.width(7.dp))
-        Text("updating background blur", color = fg, fontSize = 11.sp)
+        Text(tr("updating background blur", "Hintergrund wird aktualisiert"), color = fg, fontSize = 11.sp)
     }
 }
 

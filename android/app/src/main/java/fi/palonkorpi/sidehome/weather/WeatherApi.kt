@@ -1,5 +1,6 @@
 package fi.palonkorpi.sidehome.weather
 
+import fi.palonkorpi.sidehome.i18n.tr
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -32,11 +33,13 @@ object WeatherApi {
     /** How many days the week strip needs (SPEC §4a: a 7-cell strip). */
     private const val FORECAST_DAYS = 7
 
-    /** Place search. Coords come back with the name; no key, no permission, no device location. */
+    /** Place search. Coords come back with the name; no key, no permission, no device location.
+     *  The geocoder speaks the launcher's language, so a German launcher gets "Köln, Nordrhein-
+     *  Westfalen" instead of "Cologne" — the stored place name is what the pane will show. */
     fun geocodeUrl(query: String, count: Int = 6): String =
         "https://geocoding-api.open-meteo.com/v1/search" +
             "?name=${URLEncoder.encode(query, "UTF-8")}" +
-            "&count=$count&language=en&format=json"
+            "&count=$count&language=${tr("en", "de")}&format=json"
 
     /**
      * The forecast request. `timezone=auto` resolves the zone *from the coords* — so hours are the

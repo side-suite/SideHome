@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import fi.palonkorpi.sidehome.i18n.tr
 
 /**
  * SID-30 (SPEC §1): the "Placing X" banner — what says so while something waits, with no finger on
@@ -52,13 +53,13 @@ fun PlacingBanner(
         // Full-strength fg for both lines (DECISIONS: no muted text anywhere) — the size difference
         // is the hierarchy; only the pill under them is a translucent mix.
         Text(
-            text = "Placing $label",
+            text = tr("Placing $label", "$label platzieren"),
             color = fg,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
         )
         Text(
-            text = "Tap where it goes · Back cancels",
+            text = tr("Tap where it goes · Back cancels", "Antippen, wo es hin soll · Zurück bricht ab"),
             color = fg,
             fontSize = 11.sp,
         )

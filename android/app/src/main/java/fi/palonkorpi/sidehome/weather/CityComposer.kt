@@ -1,5 +1,6 @@
 package fi.palonkorpi.sidehome.weather
 
+import fi.palonkorpi.sidehome.i18n.tr
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
@@ -66,6 +67,8 @@ fun CityComposer(
     fg: Color,
     accent: Color,
     onDismiss: () -> Unit,
+    // Which place this composer edits: 0 = the primary place, 1 = the optional second city.
+    slot: Int = 0,
     modifier: Modifier = Modifier,
 ) {
     var query by remember { mutableStateOf("") }
@@ -108,7 +111,7 @@ fun CityComposer(
             .padding(start = 32.dp, end = 28.dp, top = 40.dp, bottom = 44.dp),
     ) {
         Text(
-            "Where are you?",
+            if (slot == 1) tr("Second place", "Zweiter Ort") else tr("Where are you?", "Wo bist du?"),
             color = fg,
             fontFamily = Inter,
             fontSize = 22.sp,
@@ -124,7 +127,7 @@ fun CityComposer(
             cursorBrush = SolidColor(accent),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = {
-                results.firstOrNull()?.let { commit(settings, it, onDismiss) }
+                results.firstOrNull()?.let { commit(settings, it, slot, onDismiss) }
             }),
             modifier = Modifier
                 .focusRequester(focus)
@@ -141,7 +144,7 @@ fun CityComposer(
                     Box(Modifier.weight(1f)) {
                         if (query.isEmpty()) {
                             Text(
-                                if (autoFocus) "Type a city" else "Tap, then type a city",
+                                if (autoFocus) tr("Type a city", "Stadt eintippen") else tr("Tap, then type a city", "Antippen, dann Stadt eintippen"),
                                 color = fg.copy(alpha = 0.6f),
                                 fontFamily = Inter,
                                 fontSize = 18.sp,
@@ -160,7 +163,7 @@ fun CityComposer(
                 Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
-                    .clickable { commit(settings, hit, onDismiss) }
+                    .clickable { commit(settings, hit, slot, onDismiss) }
                     .padding(vertical = 9.dp, horizontal = 2.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -183,9 +186,12 @@ fun CityComposer(
         // tell those apart from here, and the user's next move ("check the spelling, or the network")
         // is the same either way.
         val status = when {
-            searching && results.isEmpty() -> "Searching…"
+            searching && results.isEmpty() -> tr("Searching…", "Suche…")
             query.trim().length >= MIN_QUERY && !searching && results.isEmpty() ->
-                "Nothing came back. Check the spelling — or whether you're online."
+                tr(
+                    "Nothing came back. Check the spelling — or whether you're online.",
+                    "Nichts gefunden. Prüf die Schreibweise — oder ob du online bist.",
+                )
             else -> null
         }
         if (status != null) {
@@ -201,7 +207,7 @@ fun CityComposer(
 
         Spacer(Modifier.height(18.dp))
         Text(
-            "Cancel",
+            tr("Cancel", "Abbrechen"),
             color = accent,
             fontFamily = Inter,
             fontSize = 15.sp,
@@ -211,6 +217,27 @@ fun CityComposer(
                 .clickable(onClick = onDismiss)
                 .padding(vertical = 6.dp, horizontal = 2.dp),
         )
+
+        // Editing the second city offers the way back to one: clearing the place removes the
+        // switcher everywhere. The primary place has no such row — the launcher treats "no weather
+        // at all" as the master switch's job, not the composer's.
+        if (slot == 1 && settings.weatherPlace2 != null) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                tr("Remove second place", "Zweiten Ort entfernen"),
+                color = accent,
+                fontFamily = Inter,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable {
+                        settings.weatherPlace2 = null
+                        onDismiss()
+                    }
+                    .padding(vertical = 6.dp, horizontal = 2.dp),
+            )
+        }
     }
 }
 
@@ -221,7 +248,7 @@ private const val MIN_QUERY = 2
 private const val DEBOUNCE_MS = 350L
 
 /** Picking a place is the commit: the write moves the coords, and the pane refetches on next view. */
-private fun commit(settings: SettingsStore, hit: GeoResult, onDismiss: () -> Unit) {
-    settings.weatherPlace = hit.place
+private fun commit(settings: SettingsStore, hit: GeoResult, slot: Int, onDismiss: () -> Unit) {
+    if (slot == 1) settings.weatherPlace2 = hit.place else settings.weatherPlace = hit.place
     onDismiss()
 }

@@ -33,6 +33,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import fi.palonkorpi.sidehome.i18n.tr
 import fi.palonkorpi.sidehome.settings.SettingsStore
 
 /**
@@ -116,30 +117,34 @@ internal fun WallpaperConsentModal(
                 .padding(start = 16.dp, end = 10.dp, top = 15.dp, bottom = 9.dp),
         ) {
             Text(
-                text = "Match the wallpaper to the theme?",
+                text = tr("Match the wallpaper to the theme?", "Hintergrund ans Design anpassen?"),
                 color = fg,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                text = "Closing an app can flash the wallpaper behind SideHome. " +
-                    "Approving lets SideHome keep it set to the current theme.",
+                text = tr(
+                    "Closing an app can flash the wallpaper behind SideHome. " +
+                        "Approving lets SideHome keep it set to the current theme.",
+                    "Beim Schließen einer App kann kurz das alte Hintergrundbild aufblitzen. " +
+                        "Mit deiner Zustimmung hält SideHome es passend zum aktuellen Design.",
+                ),
                 color = fg,
                 fontSize = 13.sp,
                 lineHeight = 17.sp,
             )
             Spacer(Modifier.height(10.dp))
-            ConsentToggle(label = "Home wallpaper", on = home, onToggle = { home = it }, fg = fg)
+            ConsentToggle(label = tr("Home wallpaper", "Startbildschirm"), on = home, onToggle = { home = it }, fg = fg)
             Spacer(Modifier.height(4.dp))
-            ConsentToggle(label = "Lock screen wallpaper", on = lock, onToggle = { lock = it }, fg = fg)
+            ConsentToggle(label = tr("Lock screen wallpaper", "Sperrbildschirm"), on = lock, onToggle = { lock = it }, fg = fg)
             Spacer(Modifier.height(5.dp))
             Row(
                 modifier = Modifier.align(Alignment.End),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Not now",
+                    text = tr("Not now", "Später"),
                     color = fg,
                     fontSize = 15.sp,
                     modifier = Modifier
@@ -149,7 +154,7 @@ internal fun WallpaperConsentModal(
                 )
                 Spacer(Modifier.width(4.dp))
                 Text(
-                    text = "Approve",
+                    text = tr("Approve", "Erlauben"),
                     color = accent,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,

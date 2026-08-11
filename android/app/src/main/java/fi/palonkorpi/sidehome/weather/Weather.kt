@@ -1,5 +1,8 @@
 package fi.palonkorpi.sidehome.weather
 
+import fi.palonkorpi.sidehome.i18n.I18n
+import fi.palonkorpi.sidehome.i18n.Lang
+import fi.palonkorpi.sidehome.i18n.tr
 import fi.palonkorpi.sidehome.settings.ClockFormat
 import fi.palonkorpi.sidehome.settings.formatClock
 import kotlin.math.abs
@@ -136,7 +139,7 @@ fun showAsOf(fetchedAtMillis: Long, nowMillis: Long): Boolean =
 
 /** The stamp itself. Never "error", never a dialog — just when this was true (SPEC §4a). */
 fun asOfText(hour: Int, minute: Int, format: ClockFormat): String =
-    "as of ${formatClock(hour, minute, format)}"
+    "${tr("as of", "Stand")} ${formatClock(hour, minute, format)}"
 
 // ---- time ---------------------------------------------------------------------------------------
 
@@ -152,7 +155,9 @@ fun localMinute(epochSec: Long, utcOffsetSeconds: Int): Int =
 fun localEpochDay(epochSec: Long, utcOffsetSeconds: Int): Long =
     (epochSec + utcOffsetSeconds).floorDiv(86_400L)
 
-private val WEEKDAYS = listOf("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa")
+private val WEEKDAYS_EN = listOf("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa")
+private val WEEKDAYS_DE = listOf("So", "Mo", "Di", "Mi", "Do", "Fr", "Sa")
+private val WEEKDAYS: List<String> get() = if (I18n.lang == Lang.DE) WEEKDAYS_DE else WEEKDAYS_EN
 
 /**
  * The week strip's two-letter day label. 1970-01-01 was a Thursday, which is where the `+4` comes
@@ -169,8 +174,8 @@ fun weekdayLabel(epochSec: Long, utcOffsetSeconds: Int): String =
 fun friendlyHour(epochSec: Long, utcOffsetSeconds: Int, format: ClockFormat): String {
     val h = localHourOfDay(epochSec, utcOffsetSeconds)
     val m = localMinute(epochSec, utcOffsetSeconds)
-    if (m == 0 && h == 12) return "noon"
-    if (m == 0 && h == 0) return "midnight"
+    if (m == 0 && h == 12) return tr("noon", "Mittag")
+    if (m == 0 && h == 0) return tr("midnight", "Mitternacht")
     return formatClock(h, m, format)
 }
 
@@ -228,7 +233,9 @@ fun formatTemp(celsius: Double, unit: TempUnit): String {
  */
 const val GUST_MENTION_DELTA_KMH = 10.0
 
-private val COMPASS = listOf("N", "NE", "E", "SE", "S", "SW", "W", "NW")
+private val COMPASS_EN = listOf("N", "NE", "E", "SE", "S", "SW", "W", "NW")
+private val COMPASS_DE = listOf("N", "NO", "O", "SO", "S", "SW", "W", "NW")
+private val COMPASS: List<String> get() = if (I18n.lang == Lang.DE) COMPASS_DE else COMPASS_EN
 
 /**
  * An 8-wind compass label for a meteorological direction (whence the wind blows), or null when the
@@ -252,7 +259,7 @@ fun windLine(speedKmh: Double, gustKmh: Double, dirDeg: Int): String? {
     val dir = compassLabel(dirDeg)?.let { "$it " } ?: ""
     val gusts =
         if (gustKmh.isFinite() && gustKmh >= speedKmh + GUST_MENTION_DELTA_KMH) {
-            ", gusts ${gustKmh.roundToInt()}"
+            ", ${tr("gusts", "Böen")} ${gustKmh.roundToInt()}"
         } else {
             ""
         }
@@ -281,7 +288,7 @@ const val FEELS_MENTION_DELTA_C = 2.0
 fun feelsLine(nowC: Double, feelsC: Double, unit: TempUnit): String? {
     if (!feelsC.isFinite() || !nowC.isFinite()) return null
     if (abs(feelsC - nowC) < FEELS_MENTION_DELTA_C) return null
-    return "feels ${formatTemp(feelsC, unit)}"
+    return "${tr("feels", "gefühlt")} ${formatTemp(feelsC, unit)}"
 }
 
 /** "↑ 5:12   ↓ 21:48" in the user's clock, or null when the feed carried no sun times. */
@@ -311,7 +318,7 @@ fun uvLabel(uvMax: Double): String? =
  *  Unlike the strip, the detail says any known rain chance: opening the day is asking. */
 fun dayFactsLine(day: DayPoint): String? {
     val parts = listOfNotNull(
-        day.precipProbMaxPct.takeIf { it >= 0 }?.let { "rain $it%" },
+        day.precipProbMaxPct.takeIf { it >= 0 }?.let { "${tr("rain", "Regen")} $it%" },
         uvLabel(day.uvMax),
     )
     return parts.joinToString(" · ").ifEmpty { null }
@@ -342,15 +349,15 @@ fun nextHourLine(quarters: List<QuarterPoint>, nowEpochSec: Long): String? {
     val wetNow = ahead.first().precipMm >= QUARTER_WET_MM
     if (!wetNow) {
         val onset = ahead.firstOrNull { it.precipMm >= QUARTER_WET_MM } ?: return null
-        return "rain in ~${minutes(onset)} min"
+        return tr("rain in ~${minutes(onset)} min", "Regen in ~${minutes(onset)} Min")
     }
     // Raining: find the quarter it stops and *stays* stopped (a single dry quarter inside a shower
     // is not the rain ending — the change-line's own rule, at this grain).
     val stops = ahead.indexOfFirst { it.precipMm < QUARTER_WET_MM }
     if (stops >= 0 && ahead.drop(stops).all { it.precipMm < QUARTER_WET_MM }) {
-        return "rain easing in ~${minutes(ahead[stops])} min"
+        return tr("rain easing in ~${minutes(ahead[stops])} min", "Regen hört in ~${minutes(ahead[stops])} Min auf")
     }
-    return "rain for the next hour"
+    return tr("rain for the next hour", "Regen die nächste Stunde")
 }
 
 // ---- the expanded day ---------------------------------------------------------------------------
@@ -390,36 +397,37 @@ fun isDull(code: Int): Boolean = code == 2 || code == 3 || code == 45 || code ==
 
 /** The word the Now line uses. Unknown codes get an em dash rather than a lie. */
 fun conditionWord(code: Int): String = when (code) {
-    0 -> "Clear"
-    1 -> "Mostly clear"
-    2 -> "Partly cloudy"
-    3 -> "Cloudy"
-    45, 48 -> "Fog"
-    51, 53 -> "Drizzle"
-    55 -> "Heavy drizzle"
-    56, 57 -> "Freezing drizzle"
-    61 -> "Light rain"
-    63 -> "Rain"
-    65 -> "Heavy rain"
-    66, 67 -> "Freezing rain"
-    71 -> "Light snow"
-    73, 77 -> "Snow"
-    75 -> "Heavy snow"
-    80, 81 -> "Showers"
-    82 -> "Heavy showers"
-    85 -> "Snow showers"
-    86 -> "Heavy snow showers"
-    95 -> "Thunderstorm"
-    96, 99 -> "Thunderstorm, hail"
+    0 -> tr("Clear", "Klar")
+    1 -> tr("Mostly clear", "Fast klar")
+    2 -> tr("Partly cloudy", "Teils bewölkt")
+    3 -> tr("Cloudy", "Bewölkt")
+    45, 48 -> tr("Fog", "Nebel")
+    51, 53 -> tr("Drizzle", "Nieselregen")
+    55 -> tr("Heavy drizzle", "Starker Niesel")
+    56, 57 -> tr("Freezing drizzle", "Gefrierender Niesel")
+    61 -> tr("Light rain", "Leichter Regen")
+    63 -> tr("Rain", "Regen")
+    65 -> tr("Heavy rain", "Starkregen")
+    66, 67 -> tr("Freezing rain", "Gefrierender Regen")
+    71 -> tr("Light snow", "Leichter Schnee")
+    73, 77 -> tr("Snow", "Schnee")
+    75 -> tr("Heavy snow", "Starker Schneefall")
+    80, 81 -> tr("Showers", "Schauer")
+    82 -> tr("Heavy showers", "Starke Schauer")
+    85 -> tr("Snow showers", "Schneeschauer")
+    86 -> tr("Heavy snow showers", "Starke Schneeschauer")
+    95 -> tr("Thunderstorm", "Gewitter")
+    96, 99 -> tr("Thunderstorm, hail", "Gewitter, Hagel")
     else -> "—"
 }
 
-/** The noun the change-line uses for what's falling: "rain starts ~16:00", "snow starts ~16:00". */
+/** The noun the change-line uses for what's falling: "rain starts ~16:00", "snow starts ~16:00".
+ *  German capitalises its nouns, so the pairs differ in case as well as language. */
 fun precipNoun(code: Int): String = when {
-    code in SNOW -> "snow"
-    code in STORM -> "storms"
-    code in DRIZZLE -> "drizzle"
-    else -> "rain"
+    code in SNOW -> tr("snow", "Schnee")
+    code in STORM -> tr("storms", "Gewitter")
+    code in DRIZZLE -> tr("drizzle", "Niesel")
+    else -> tr("rain", "Regen")
 }
 
 /**
@@ -474,19 +482,22 @@ fun changeLine(
     if (!isWet(nowCode)) {
         val onset = ahead.firstOrNull { isWet(it.code) && it.precipProbPct >= RAIN_PROB_THRESHOLD }
         if (onset != null) {
-            return "${precipNoun(onset.code)} starts ~${friendlyHour(onset.epochSec, utcOffsetSeconds, format)}"
+            val h = friendlyHour(onset.epochSec, utcOffsetSeconds, format)
+            return tr("${precipNoun(onset.code)} starts ~$h", "${precipNoun(onset.code)} ab ~$h")
         }
     } else {
         val stops = ahead.indexOfFirst { !isWet(it.code) }
         if (stops >= 0 && holds(ahead, stops) { !isWet(it.code) }) {
-            return "${precipNoun(nowCode)} stops ~${friendlyHour(ahead[stops].epochSec, utcOffsetSeconds, format)}"
+            val h = friendlyHour(ahead[stops].epochSec, utcOffsetSeconds, format)
+            return tr("${precipNoun(nowCode)} stops ~$h", "${precipNoun(nowCode)} endet ~$h")
         }
     }
 
     if (isDull(nowCode)) {
         val clears = ahead.indexOfFirst { isClear(it.code) }
         if (clears >= 0 && holds(ahead, clears) { isClear(it.code) }) {
-            return "clearing by ${friendlyHour(ahead[clears].epochSec, utcOffsetSeconds, format)}"
+            val h = friendlyHour(ahead[clears].epochSec, utcOffsetSeconds, format)
+            return tr("clearing by $h", "klart auf bis ~$h")
         }
     }
     return null

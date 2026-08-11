@@ -1,5 +1,6 @@
 package fi.palonkorpi.sidehome.ui
 
+import fi.palonkorpi.sidehome.i18n.tr
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -472,7 +473,7 @@ fun Drawer(
             // holds the query; the active IME disambiguates the compact tile's key pairs. Live
             // narrowing follows composing text — onValueChange fires on composition, not just on
             // commit — so the list filters as you type, before you accept a candidate.
-            val placeholder = if (autoFocus) "Type to search" else "Tap to search"
+            val placeholder = if (autoFocus) tr("Type to search", "Einfach lostippen") else tr("Tap to search", "Zum Suchen antippen")
             // The mode toggle rides the search line (SPEC §2b), so the field takes the remaining
             // width rather than the full row. Field and toggle are matching translucent-fg pills, so
             // the search line reads as one set of controls rather than an underlined field beside a box.
@@ -557,7 +558,7 @@ fun Drawer(
                 if (items.isEmpty()) {
                     item {
                         Text(
-                            text = "No apps match “${query.trim()}”",
+                            text = tr("No apps match “${query.trim()}”", "Keine Apps für „${query.trim()}“"),
                             color = fg,
                             fontSize = 16.sp,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 14.dp),

@@ -32,7 +32,14 @@ class WeatherStore private constructor(context: Context) {
     private val prefs: SharedPreferences =
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-    private val _forecast = MutableStateFlow(decodeForecast(prefs.getString(KEY_CACHE, null)))
+    /** One cached forecast, its persistence key, and its own single-flight lock. */
+    private inner class Slot(val key: String) {
+        val flow = MutableStateFlow(decodeForecast(prefs.getString(key, null)))
+        val fetching = Mutex()
+    }
+
+    // Slot 0 is the primary place (the home glance reads it), slot 1 the optional second city.
+    private val slots = listOf(Slot(KEY_CACHE), Slot(KEY_CACHE2))
 
     /**
      * The last-known forecast — seeded from disk at construction, so the very first composition of
@@ -40,29 +47,35 @@ class WeatherStore private constructor(context: Context) {
      * chosen (the user just changed cities); [Forecast.matches] is how the pane refuses to render it
      * under the wrong name, and [needsRefresh] is how it gets replaced.
      */
-    val forecast: StateFlow<Forecast?> = _forecast.asStateFlow()
+    val forecast: StateFlow<Forecast?> = slots[0].flow.asStateFlow()
 
-    /** One fetch at a time. A second caller doesn't queue — it returns; the first is fetching. */
-    private val fetching = Mutex()
+    /** The second city's last-known forecast — same contract as [forecast], own cache. */
+    val forecast2: StateFlow<Forecast?> = slots[1].flow.asStateFlow()
+
+    /** [forecast] or [forecast2] by slot index; anything but 1 is the primary slot. */
+    fun forecastFor(slot: Int): StateFlow<Forecast?> = if (slot == 1) forecast2 else forecast
 
     /**
      * Fetch, but only if there's a reason to ([needsRefresh]). Suspends; safe to call from a
      * `LaunchedEffect` and safe to cancel — a cancelled fetch just leaves the cache alone.
+     * [slot] 0 is the primary place, 1 the second city; each has its own cache and lock, so the
+     * two cities never race each other or overwrite each other's forecast.
      *
      * A failed fetch is silent by design. The network on a phone in a lift is not an event the user
      * needs told about, and the pane behind this call is already showing the right thing.
      */
-    suspend fun refreshIfNeeded(place: Place?, nowMillis: Long = System.currentTimeMillis()) {
-        if (place == null || !needsRefresh(_forecast.value, place, nowMillis)) return
-        if (!fetching.tryLock()) return
+    suspend fun refreshIfNeeded(place: Place?, slot: Int = 0, nowMillis: Long = System.currentTimeMillis()) {
+        val s = slots[if (slot == 1) 1 else 0]
+        if (place == null || !needsRefresh(s.flow.value, place, nowMillis)) return
+        if (!s.fetching.tryLock()) return
         try {
             val fresh = withContext(Dispatchers.IO) {
                 WeatherApi.fetchForecast(place, System.currentTimeMillis())
             } ?: return
-            _forecast.value = fresh
-            prefs.edit().putString(KEY_CACHE, encodeForecast(fresh)).apply()
+            s.flow.value = fresh
+            prefs.edit().putString(s.key, encodeForecast(fresh)).apply()
         } finally {
-            fetching.unlock()
+            s.fetching.unlock()
         }
     }
 
@@ -73,6 +86,7 @@ class WeatherStore private constructor(context: Context) {
     companion object {
         private const val PREFS = "sidehome_weather"
         private const val KEY_CACHE = "forecast_v1"
+        private const val KEY_CACHE2 = "forecast2_v1"
 
         @Volatile private var instance: WeatherStore? = null
 

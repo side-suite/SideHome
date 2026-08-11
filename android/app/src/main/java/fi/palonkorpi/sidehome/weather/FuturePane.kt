@@ -1,5 +1,6 @@
 package fi.palonkorpi.sidehome.weather
 
+import fi.palonkorpi.sidehome.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,6 +40,7 @@ import fi.palonkorpi.sidehome.settings.ClockFormat
 import fi.palonkorpi.sidehome.settings.SettingsStore
 import fi.palonkorpi.sidehome.settings.clockFormatAsState
 import fi.palonkorpi.sidehome.settings.tempUnitAsState
+import fi.palonkorpi.sidehome.settings.weatherPlace2AsState
 import fi.palonkorpi.sidehome.settings.weatherPlaceAsState
 import fi.palonkorpi.sidehome.ui.HomeMetrics
 import fi.palonkorpi.sidehome.ui.Inter
@@ -78,10 +80,19 @@ fun FuturePane(
     scrollState: ScrollState = rememberScrollState(),
     modifier: Modifier = Modifier,
 ) {
-    val place by settings.weatherPlaceAsState()
+    val place1 by settings.weatherPlaceAsState()
+    val place2 by settings.weatherPlace2AsState()
     val unit by settings.tempUnitAsState()
     val clockFormat by settings.clockFormatAsState()
-    val forecast by store.forecast.collectAsState()
+
+    // Which city the pane is looking at: 0 = the primary place, 1 = the optional second city.
+    // Local and unsaved, like an expanded week day — the pane always opens on the primary city.
+    // A removed second city snaps the view back rather than leaving it on a slot with no place.
+    var slot by remember { mutableStateOf(0) }
+    if (slot == 1 && place2 == null) slot = 0
+    val place = if (slot == 1) place2 else place1
+
+    val forecast by store.forecastFor(slot).collectAsState()
     var composerOpen by remember { mutableStateOf(false) }
 
     // Tell the host the composer is up, so it can detach the pager the way it already does for the
@@ -98,8 +109,8 @@ fun FuturePane(
     // settling at Future, so this fires on arrival and again on the next arrival — which is exactly
     // when a stale cache matters and never while the phone is in a pocket. The store no-ops if the
     // cache is young enough, so most arrivals cost nothing.
-    LaunchedEffect(visible, place) {
-        if (visible) store.refreshIfNeeded(place)
+    LaunchedEffect(visible, place, slot) {
+        if (visible) store.refreshIfNeeded(place, slot)
     }
 
     // Read once per arrival rather than ticking: the only thing "now" decides here is whether the
@@ -123,6 +134,7 @@ fun FuturePane(
             fg = fg,
             accent = accent,
             onDismiss = { composerOpen = false },
+            slot = slot,
             modifier = modifier,
         )
         return
@@ -149,7 +161,7 @@ fun FuturePane(
         ) {
             if (place == null) {
                 Text(
-                    "Set your location",
+                    tr("Set your location", "Ort festlegen"),
                     color = accent,
                     fontFamily = Inter,
                     fontSize = 18.sp,
@@ -160,7 +172,13 @@ fun FuturePane(
                         .padding(vertical = 6.dp, horizontal = 2.dp),
                 )
             } else {
-                PlaceLine(name = place?.name.orEmpty(), fg = fg, onEdit = { composerOpen = true })
+                PlaceLine(
+                    name = place?.name.orEmpty(),
+                    otherName = (if (slot == 1) place1 else place2)?.name,
+                    fg = fg,
+                    onEdit = { composerOpen = true },
+                    onSwitch = { slot = if (slot == 1) 0 else 1 },
+                )
                 if (shown != null) {
                     // Which week day is expanded, by its midnight epoch. Local and unsaved: an
                     // expansion is a glance's follow-up question, not state worth surviving a
@@ -205,19 +223,45 @@ fun FuturePane(
  * The place, and the first of SPEC §4a's two ways to change it: the name in the forecast is the
  * button. The pin glyph is there to say so — without it a line of text that happens to be tappable
  * is a secret.
+ *
+ * With a second city configured ([otherName] non-null) the line grows a switcher: the shown name
+ * edits, the other name switches the pane to that city. Hierarchy is weight, not a muted colour —
+ * this is an ambient surface and DECISIONS forbids dimmed copy on those.
  */
 @Composable
-private fun PlaceLine(name: String, fg: Color, onEdit: () -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onEdit)
-            .padding(vertical = 4.dp, horizontal = 2.dp),
-    ) {
-        LineIcon(glyph = "pin", color = fg, size = 14.dp, strokeWidthUnits = 1.7f)
-        Spacer(Modifier.width(7.dp))
-        Text(name, color = fg, fontFamily = Inter, fontSize = 14.sp, fontWeight = FontWeight.Normal)
+private fun PlaceLine(
+    name: String,
+    otherName: String?,
+    fg: Color,
+    onEdit: () -> Unit,
+    onSwitch: () -> Unit,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onEdit)
+                .padding(vertical = 4.dp, horizontal = 2.dp),
+        ) {
+            LineIcon(glyph = "pin", color = fg, size = 14.dp, strokeWidthUnits = 1.7f)
+            Spacer(Modifier.width(7.dp))
+            Text(name, color = fg, fontFamily = Inter, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+        }
+        if (otherName != null) {
+            Spacer(Modifier.width(12.dp))
+            Text(
+                otherName,
+                color = fg,
+                fontFamily = Inter,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Light,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onSwitch)
+                    .padding(vertical = 4.dp, horizontal = 4.dp),
+            )
+        }
     }
 }
 
@@ -289,7 +333,7 @@ private fun NowLine(forecast: Forecast, unit: TempUnit, fg: Color) {
                 forecast.today?.let { day ->
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "H ${formatTemp(day.highC, unit)}   L ${formatTemp(day.lowC, unit)}",
+                        "H ${formatTemp(day.highC, unit)}   ${tr("L", "T")} ${formatTemp(day.lowC, unit)}",
                         color = fg,
                         fontFamily = Inter,
                         fontSize = 14.sp,

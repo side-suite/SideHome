@@ -1,5 +1,7 @@
 package fi.palonkorpi.sidehome.ui
 
+import fi.palonkorpi.sidehome.i18n.tr
+import fi.palonkorpi.sidehome.i18n.I18n
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
@@ -74,6 +76,8 @@ class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        // Speak the device's language from the first frame (see I18n's header).
+        I18n.lang = I18n.fromLanguageTag(java.util.Locale.getDefault().language)
         val settings = SettingsStore(this)
         setContent { SettingsScreen(settings) }
     }
@@ -100,7 +104,8 @@ private fun SettingsScreen(settings: SettingsStore) {
     // SID-35's §4a location mirror. The composer *replaces* the settings column rather than floating
     // over it: this screen has no recede-by-blur machinery of its own, and a modal that just sat on
     // top of a live list would be the one overlay in the launcher that doesn't push its host back.
-    var cityComposerOpen by remember { mutableStateOf(false) }
+    // Null = closed; 0/1 = which weather place the composer is editing.
+    var cityComposerSlot by remember { mutableStateOf<Int?>(null) }
     val weatherStore = rememberWeatherStore()
 
     // This Activity is its own composition, outside the launcher root that sets these — so without
@@ -117,13 +122,15 @@ private fun SettingsScreen(settings: SettingsStore) {
     ) {
         AmbientBackground(mood = mood, modifier = Modifier.fillMaxSize())
 
-        if (cityComposerOpen) {
+        val composerSlot = cityComposerSlot
+        if (composerSlot != null) {
             CityComposer(
                 settings = settings,
                 store = weatherStore,
                 fg = fg,
                 accent = accent,
-                onDismiss = { cityComposerOpen = false },
+                onDismiss = { cityComposerSlot = null },
+                slot = composerSlot,
             )
         } else {
             Column(
@@ -136,14 +143,14 @@ private fun SettingsScreen(settings: SettingsStore) {
                     .padding(horizontal = 24.dp, vertical = 20.dp),
             ) {
                 Text(
-                    "Settings",
+                    tr("Settings", "Einstellungen"),
                     color = fg,
                     fontWeight = FontWeight.Light,
                     fontSize = 30.sp,
                 )
                 Spacer(Modifier.height(28.dp))
 
-                SettingRow(label = "Clock", fg = fg) {
+                SettingRow(label = tr("Clock", "Uhr"), fg = fg) {
                     Segmented(
                         options = listOf("12h" to ClockFormat.H12, "24h" to ClockFormat.H24),
                         selected = clockFormat,
@@ -157,9 +164,9 @@ private fun SettingsScreen(settings: SettingsStore) {
                 // SID-97: the one shipped key-nav knob. Off makes dispatchKeyEvent a full passthrough,
                 // so the hardware tile drives whatever the user has bound it to (e.g. an external Key
                 // Mapper app) instead of the launcher. The profile switcher (SID-89) is post-MVP.
-                SettingRow(label = "Key navigation", fg = fg) {
+                SettingRow(label = tr("Key navigation", "Tastensteuerung"), fg = fg) {
                     Segmented(
-                        options = listOf("Off" to false, "On" to true),
+                        options = listOf(tr("Off", "Aus") to false, tr("On", "An") to true),
                         selected = keyNavEnabled,
                         fg = fg,
                         accent = accent,
@@ -171,9 +178,9 @@ private fun SettingsScreen(settings: SettingsStore) {
                 // SID-182: search-first ("Search") is the shipped default; "List" opens the library
                 // quiet — no focused field, no IME, typing does nothing, and the search pill is a
                 // tap or a key-nav walk away.
-                SettingRow(label = "Library opens in", fg = fg) {
+                SettingRow(label = tr("Library opens in", "Bibliothek"), fg = fg) {
                     Segmented(
-                        options = listOf("Search" to false, "List" to true),
+                        options = listOf(tr("Search", "Suche") to false, tr("List", "Liste") to true),
                         selected = drawerListFirst,
                         fg = fg,
                         accent = accent,
@@ -184,9 +191,9 @@ private fun SettingsScreen(settings: SettingsStore) {
                 Spacer(Modifier.height(28.dp))
                 // SID-183: the faint 1–9 labels on home items — the visible half of the number-key
                 // quick launch. Off drops only the labels; the keys keep launching.
-                SettingRow(label = "App numbers", fg = fg) {
+                SettingRow(label = tr("App numbers", "App-Nummern"), fg = fg) {
                     Segmented(
-                        options = listOf("Off" to false, "On" to true),
+                        options = listOf(tr("Off", "Aus") to false, tr("On", "An") to true),
                         selected = showIndexBadges,
                         fg = fg,
                         accent = accent,
@@ -205,7 +212,7 @@ private fun SettingsScreen(settings: SettingsStore) {
                     settings = settings,
                     fg = fg,
                     accent = accent,
-                    onEditLocation = { cityComposerOpen = true },
+                    onEditLocation = { cityComposerSlot = it },
                 )
 
                 Spacer(Modifier.height(28.dp))
@@ -240,9 +247,9 @@ private fun WallpaperSection(settings: SettingsStore, fg: Color, accent: Color) 
     val syncHome by settings.wallpaperSyncHomeAsState()
     val syncLock by settings.wallpaperSyncLockAsState()
     Column(Modifier.fillMaxWidth()) {
-        SettingRow(label = "Home wallpaper", fg = fg) {
+        SettingRow(label = tr("Home wallpaper", "Startbildschirm"), fg = fg) {
             Segmented(
-                options = listOf("Off" to false, "On" to true),
+                options = listOf(tr("Off", "Aus") to false, tr("On", "An") to true),
                 selected = syncHome,
                 fg = fg,
                 accent = accent,
@@ -250,9 +257,9 @@ private fun WallpaperSection(settings: SettingsStore, fg: Color, accent: Color) 
             )
         }
         Spacer(Modifier.height(12.dp))
-        SettingRow(label = "Lock wallpaper", fg = fg) {
+        SettingRow(label = tr("Lock wallpaper", "Sperrbildschirm"), fg = fg) {
             Segmented(
-                options = listOf("Off" to false, "On" to true),
+                options = listOf(tr("Off", "Aus") to false, tr("On", "An") to true),
                 selected = syncLock,
                 fg = fg,
                 accent = accent,
@@ -261,8 +268,12 @@ private fun WallpaperSection(settings: SettingsStore, fg: Color, accent: Color) 
         }
         Spacer(Modifier.height(6.dp))
         Text(
-            text = "Keeps the system wallpaper matched to the theme, so leaving an app never " +
-                "flashes an old background.",
+            text = tr(
+                "Keeps the system wallpaper matched to the theme, so leaving an app never " +
+                    "flashes an old background.",
+                "Hält das System-Hintergrundbild passend zum Design, damit beim Verlassen " +
+                    "einer App nie ein alter Hintergrund aufblitzt.",
+            ),
             color = fg.copy(alpha = 0.85f),
             fontSize = 13.sp,
             lineHeight = 17.sp,
@@ -299,7 +310,7 @@ private fun NotificationDotsRow(fg: Color, accent: Color) {
             }
             .padding(vertical = 4.dp),
     ) {
-        SettingRow(label = "Notification dots", fg = fg) {
+        SettingRow(label = tr("Notification dots", "Mitteilungspunkte"), fg = fg) {
             Text(
                 notificationAccessStatus(granted),
                 color = if (granted) accent else fg.copy(alpha = 0.7f),
@@ -309,9 +320,14 @@ private fun NotificationDotsRow(fg: Color, accent: Color) {
         }
         Spacer(Modifier.height(6.dp))
         Text(
-            "A dot on apps with a notification you haven't dealt with. Needs Android's " +
-                "notification access — SideHome counts them on the phone and never stores " +
-                "or sends anything.",
+            tr(
+                "A dot on apps with a notification you haven't dealt with. Needs Android's " +
+                    "notification access — SideHome counts them on the phone and never stores " +
+                    "or sends anything.",
+                "Ein Punkt auf Apps mit einer noch offenen Benachrichtigung. Braucht Androids " +
+                    "Benachrichtigungszugriff — SideHome zählt sie nur auf dem Gerät und " +
+                    "speichert oder sendet nichts.",
+            ),
             color = fg.copy(alpha = 0.85f),
             fontSize = 13.sp,
             lineHeight = 17.sp,
@@ -394,7 +410,7 @@ private fun AboutSection(fg: Color) {
         }.getOrNull() ?: ""
     }
     Column {
-        Text("About", color = fg, fontWeight = FontWeight.Light, fontSize = 22.sp)
+        Text(tr("About", "Über"), color = fg, fontWeight = FontWeight.Light, fontSize = 22.sp)
         Spacer(Modifier.height(10.dp))
         Text(
             if (version.isBlank()) "SideHome" else "SideHome $version",
@@ -403,7 +419,7 @@ private fun AboutSection(fg: Color) {
         )
         Spacer(Modifier.height(6.dp))
         Text(
-            "Open-source licenses",
+            tr("Open-source licenses", "Open-Source-Lizenzen"),
             color = fg,
             fontSize = 15.sp,
         )

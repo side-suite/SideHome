@@ -1,5 +1,6 @@
 package fi.palonkorpi.sidehome.ui
 
+import fi.palonkorpi.sidehome.i18n.tr
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -154,7 +155,9 @@ internal fun HomePage(
     val dow = clock.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
         .replaceFirstChar { it.titlecase(Locale.getDefault()) }
     val month = clock.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
-    val dateStr = "$dow, ${clock.dayOfMonth} $month"
+    // German writes the ordinal day with a period ("Montag, 10. August"); weekday and month
+    // names already come localised from java.time via the default locale.
+    val dateStr = tr("$dow, ${clock.dayOfMonth} $month", "$dow, ${clock.dayOfMonth}. $month")
 
     // Notification dots (SID-46). Read from the process-wide badge source rather than threaded down
     // from MainActivity: a dot belongs to the *package*, so the same app lights on its home tile and
@@ -342,7 +345,7 @@ internal fun HomePage(
         ) {
             LineIcon(glyph = "search", color = fg, size = 16.dp, strokeWidthUnits = 1.7f)
             Spacer(Modifier.width(8.dp))
-            Text(text = "apps", color = fg, fontSize = 13.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.02.em)
+            Text(text = tr("apps", "Apps"), color = fg, fontSize = 13.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.02.em)
         }
     }
 }

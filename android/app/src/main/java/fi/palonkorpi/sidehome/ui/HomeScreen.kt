@@ -1,5 +1,6 @@
 package fi.palonkorpi.sidehome.ui
 
+import fi.palonkorpi.sidehome.i18n.tr
 import android.app.Activity
 import android.content.Intent
 import android.content.res.Configuration
@@ -1621,7 +1622,7 @@ fun SideHomeApp(
             confirmRemoveFolder?.let { prompt ->
                 ConfirmModal(
                     message = removeFolderMessage(prompt.name),
-                    confirmLabel = "Remove",
+                    confirmLabel = tr("Remove", "Entfernen"),
                     fg = fg,
                     accent = accent,
                     panelColor = menuColor,
@@ -1662,7 +1663,7 @@ fun SideHomeApp(
                 Box(Modifier.fillMaxSize()) {
                     OverlayBackdrop(color = backdropColor, photo = photoOverlayBake, modifier = Modifier.fillMaxSize())
                     IconPicker(
-                        title = "Change icon",
+                        title = tr("Change icon", "Symbol ändern"),
                         current = glyphFor(app),
                         fg = fg,
                         accent = accent,
@@ -1718,7 +1719,7 @@ fun SideHomeApp(
                     Box(Modifier.fillMaxSize()) {
                         OverlayBackdrop(color = backdropColor, photo = photoOverlayBake, modifier = Modifier.fillMaxSize())
                         IconPicker(
-                            title = "Folder icon",
+                            title = tr("Folder icon", "Ordner-Symbol"),
                             current = folder.glyph,
                             fg = fg,
                             accent = accent,

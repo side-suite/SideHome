@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import fi.palonkorpi.sidehome.i18n.tr
 
 /**
  * The categorized Iconoir picker: reached from the §1 action strip's Change-icon cell, for an app
@@ -88,7 +89,7 @@ private fun PickerHeader(title: String, fg: Color, accent: Color, onClose: () ->
         Text(title, color = fg, fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.weight(1f))
         Text(
-            "Done", color = accent, fontSize = 16.sp, fontWeight = FontWeight.Bold,
+            tr("Done", "Fertig"), color = accent, fontSize = 16.sp, fontWeight = FontWeight.Bold,
             modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onClose() }.padding(4.dp),
         )
     }

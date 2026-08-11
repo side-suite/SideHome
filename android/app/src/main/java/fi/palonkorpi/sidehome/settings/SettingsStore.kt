@@ -105,6 +105,15 @@ class SettingsStore(context: Context) {
         set(value) = prefs.edit().putString(KEY_WEATHER_PLACE, value?.toPref()).apply()
 
     /**
+     * An optional second weather place. Null means "not configured" — the Future pane then shows no
+     * city switcher and behaves exactly as it did with one place. Same typed-never-sensed contract
+     * as [weatherPlace].
+     */
+    var weatherPlace2: Place?
+        get() = placeFromPref(prefs.getString(KEY_WEATHER_PLACE2, null))
+        set(value) = prefs.edit().putString(KEY_WEATHER_PLACE2, value?.toPref()).apply()
+
+    /**
      * Temperature units (SPEC.md §4a). Defaults to Celsius.
      *
      * SPEC says this "reuses §1's existing temperature-units setting" — there was no such setting;
@@ -276,6 +285,7 @@ class SettingsStore(context: Context) {
         const val KEY_BROWSE_MODE = "browse_mode"
         const val KEY_COACH_SEEN = "coach_seen"
         const val KEY_WEATHER_PLACE = "weather_place"
+        const val KEY_WEATHER_PLACE2 = "weather_place2"
         const val KEY_TEMP_UNIT = "temp_unit"
         const val KEY_KEYNAV_ENABLED = "keynav_enabled"
         const val KEY_SHOW_INDEX_BADGES = "show_index_badges"
@@ -422,6 +432,18 @@ fun SettingsStore.weatherPlaceAsState(): State<Place?> {
     DisposableEffect(this) {
         state.value = weatherPlace
         val handle = addChangeListener { state.value = weatherPlace }
+        onDispose { handle.close() }
+    }
+    return state
+}
+
+/** Observe [SettingsStore.weatherPlace2] as Compose [State], exactly like [weatherPlaceAsState]. */
+@Composable
+fun SettingsStore.weatherPlace2AsState(): State<Place?> {
+    val state = remember(this) { mutableStateOf(weatherPlace2) }
+    DisposableEffect(this) {
+        state.value = weatherPlace2
+        val handle = addChangeListener { state.value = weatherPlace2 }
         onDispose { handle.close() }
     }
     return state

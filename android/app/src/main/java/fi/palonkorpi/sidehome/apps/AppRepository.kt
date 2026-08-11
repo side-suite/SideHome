@@ -99,6 +99,7 @@ class AppRepository(private val context: Context) {
      * no name keyword still lands in Media → "music"). Games / unknown → null (no bucket).
      */
     private fun appInfoCategory(info: ApplicationInfo): BuiltInCategory? = when (info.category) {
+        ApplicationInfo.CATEGORY_GAME -> BuiltInCategory.GAMES
         ApplicationInfo.CATEGORY_AUDIO,
         ApplicationInfo.CATEGORY_VIDEO,
         ApplicationInfo.CATEGORY_IMAGE -> BuiltInCategory.MEDIA
@@ -106,7 +107,8 @@ class AppRepository(private val context: Context) {
         ApplicationInfo.CATEGORY_MAPS -> BuiltInCategory.WEB
         ApplicationInfo.CATEGORY_NEWS,
         ApplicationInfo.CATEGORY_PRODUCTIVITY -> BuiltInCategory.PRODUCTIVITY
-        else -> null
+        // Pre-category games set only the manifest's isGame flag; still a game.
+        else -> if ((info.flags and ApplicationInfo.FLAG_IS_GAME) != 0) BuiltInCategory.GAMES else null
     }
 
     // ---- persisted state ----

@@ -42,6 +42,7 @@ data class Category(
 enum class BuiltInCategory(private val labelEn: String, private val labelDe: String, val glyph: String) {
     COMMUNICATION("Communication", "Kommunikation", "chat"),
     MEDIA("Media", "Medien", "music"),
+    GAMES("Games", "Spiele", "gamepad"),
     WEB("Web & Maps", "Web & Karten", "globe"),
     PRODUCTIVITY("Productivity", "Produktivität", "note"),
     MONEY("Money", "Finanzen", "card"),
@@ -100,6 +101,7 @@ object CategoryEngine {
         KeywordRule("heart", BuiltInCategory.HEALTH, listOf("health", "fit", "workout")),
         KeywordRule("book", BuiltInCategory.PRODUCTIVITY, listOf("book", "read", "news")),
         KeywordRule("sun", BuiltInCategory.UTILITIES, listOf("weather")),
+        KeywordRule("gamepad", BuiltInCategory.GAMES, listOf("game", "spiel", "puzzle", "sudoku", "chess", "dungeon", "arcade", "pinball", "minecraft")),
     )
 
     /** The one keyword rule this haystack matches, if any (first wins). */

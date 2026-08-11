@@ -82,6 +82,19 @@ object FdroidCategoryMap {
         put("com.mkulesh.micromath.plus", BuiltInCategory.UTILITIES)
         put("nodomain.freeyourgadget.gadgetbridge", BuiltInCategory.HEALTH)
 
+        // --- Games ---
+        put("net.minetest.minetest", BuiltInCategory.GAMES)                // Minetest / Luanti
+        put("org.supertuxkart.stk", BuiltInCategory.GAMES)                 // SuperTuxKart
+        put("io.anuke.mindustry", BuiltInCategory.GAMES)                   // Mindustry
+        put("com.unciv.app", BuiltInCategory.GAMES)                        // Unciv
+        put("com.shatteredpixel.shatteredpixeldungeon", BuiltInCategory.GAMES)
+        put("org.lichess.mobileV2", BuiltInCategory.GAMES)                 // Lichess
+        put("org.secuso.privacyfriendly2048", BuiltInCategory.GAMES)
+        put("name.boyle.chris.sgtpuzzles", BuiltInCategory.GAMES)          // Sgt. Puzzles
+        put("com.dozingcatsoftware.bouncy", BuiltInCategory.GAMES)         // Vector Pinball
+        put("com.mojang.minecraftpe", BuiltInCategory.GAMES)               // Minecraft
+        put("com.roblox.client", BuiltInCategory.GAMES)
+
         // --- System / Utilities (stores, files, weather, settings, tools) ---
         put("com.aurora.store", BuiltInCategory.UTILITIES)                 // Aurora Store
         put("org.fdroid.fdroid", BuiltInCategory.UTILITIES)                // F-Droid

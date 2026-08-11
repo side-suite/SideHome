@@ -52,6 +52,7 @@ import kotlin.math.roundToInt
 import fi.palonkorpi.sidehome.apps.AppEntry
 import fi.palonkorpi.sidehome.apps.FolderItem
 import fi.palonkorpi.sidehome.gesture.GestureTuning
+import fi.palonkorpi.sidehome.i18n.tr
 
 /**
  * Folder open: the home has receded behind us; the folder's apps appear centred over the untouched
@@ -189,7 +190,7 @@ fun FolderPopover(
                         // the last member auto-deletes the folder, so this is no longer reachable by
                         // editing; what still reaches it is a member uninstalling between two runs,
                         // which the load prunes out of the member list.
-                        text = "Empty folder.",
+                        text = tr("Empty folder.", "Leerer Ordner."),
                         color = fg,
                         fontSize = 16.sp,
                         modifier = Modifier

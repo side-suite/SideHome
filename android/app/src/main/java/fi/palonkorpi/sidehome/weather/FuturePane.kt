@@ -1,5 +1,6 @@
 package fi.palonkorpi.sidehome.weather
 
+import fi.palonkorpi.sidehome.i18n.tr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -149,7 +150,7 @@ fun FuturePane(
         ) {
             if (place == null) {
                 Text(
-                    "Set your location",
+                    tr("Set your location", "Ort festlegen"),
                     color = accent,
                     fontFamily = Inter,
                     fontSize = 18.sp,
@@ -289,7 +290,7 @@ private fun NowLine(forecast: Forecast, unit: TempUnit, fg: Color) {
                 forecast.today?.let { day ->
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "H ${formatTemp(day.highC, unit)}   L ${formatTemp(day.lowC, unit)}",
+                        "H ${formatTemp(day.highC, unit)}   ${tr("L", "T")} ${formatTemp(day.lowC, unit)}",
                         color = fg,
                         fontFamily = Inter,
                         fontSize = 14.sp,

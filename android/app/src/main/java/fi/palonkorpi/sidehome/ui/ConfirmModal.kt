@@ -23,6 +23,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import fi.palonkorpi.sidehome.i18n.tr
 
 /**
  * A destructive act that wants an answer before it runs (SPEC §1). A small centred panel on the
@@ -74,7 +75,7 @@ fun ConfirmModal(
                 // run, so neither is dimmed. Accent marks the act the question is about — the
                 // answer that does something — not the one being recommended.
                 Text(
-                    text = "Cancel",
+                    text = tr("Cancel", "Abbrechen"),
                     color = fg,
                     fontSize = 15.sp,
                     modifier = Modifier
@@ -119,4 +120,7 @@ internal data class RemoveFolderPrompt(val index: Int, val name: String)
  * it might uninstall four things, and the honest answer to it is much scarier than the act.
  */
 fun removeFolderMessage(name: String): String =
-    "Remove folder “$name”? The apps stay in your library."
+    tr(
+        "Remove folder “$name”? The apps stay in your library.",
+        "Ordner „$name“ entfernen? Die Apps bleiben in deiner Bibliothek.",
+    )

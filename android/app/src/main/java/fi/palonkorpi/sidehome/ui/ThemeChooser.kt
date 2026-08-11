@@ -64,6 +64,7 @@ import fi.palonkorpi.sidehome.ambient.foregroundInk
 import fi.palonkorpi.sidehome.ambient.themeMood
 import fi.palonkorpi.sidehome.color.Lch
 import fi.palonkorpi.sidehome.color.toColor
+import fi.palonkorpi.sidehome.i18n.tr
 import kotlin.math.absoluteValue
 import kotlinx.coroutines.launch
 
@@ -144,7 +145,7 @@ fun ThemeChooser(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                "Theme",
+                tr("Theme", "Design"),
                 color = fg,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
@@ -241,7 +242,11 @@ fun ThemeChooser(
 
             Spacer(Modifier.height(14.dp))
             Text(
-                if (focused == currentTheme) "Current theme" else "Tap to apply",
+                if (focused == currentTheme) {
+                    tr("Current theme", "Aktuelles Design")
+                } else {
+                    tr("Tap to apply", "Antippen zum Anwenden")
+                },
                 color = fg,
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center,
@@ -485,7 +490,7 @@ private fun CustomizationSlot(
                 LineIcon(glyph = "photo", color = fg, size = 16.dp)
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    if (photoPicked) "Change image" else "Choose image",
+                    if (photoPicked) tr("Change image", "Bild ändern") else tr("Choose image", "Bild wählen"),
                     color = fg,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
@@ -552,7 +557,7 @@ private fun DayAdjustToggle(on: Boolean, onToggle: (Boolean) -> Unit, fg: Color)
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            "Adjust with the day",
+            tr("Adjust with the day", "Folgt dem Tageslauf"),
             color = fg,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,

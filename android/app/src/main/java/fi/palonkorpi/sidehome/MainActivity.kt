@@ -1,5 +1,6 @@
 package fi.palonkorpi.sidehome
 
+import fi.palonkorpi.sidehome.i18n.I18n
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -160,6 +161,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        // Speak the device's language from the first frame (see I18n's header).
+        I18n.lang = I18n.fromLanguageTag(java.util.Locale.getDefault().language)
         val repo = AppRepository(this)
         val settings = SettingsStore(this)
         setContent {

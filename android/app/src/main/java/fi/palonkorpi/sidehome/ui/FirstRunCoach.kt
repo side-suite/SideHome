@@ -29,6 +29,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import fi.palonkorpi.sidehome.i18n.tr
 import fi.palonkorpi.sidehome.settings.SettingsStore
 
 /**
@@ -82,11 +83,11 @@ internal data class CoachLine(
 // now conditional; pure so the line set is testable without layout.
 internal fun coachLines(weatherEnabled: Boolean, quickLaunch: Boolean = false): List<CoachLine> =
     buildList {
-        add(CoachLine(CHEVRON_UP, "apps"))
-        if (weatherEnabled) add(CoachLine(CHEVRON_LEFT, "weather"))
+        add(CoachLine(CHEVRON_UP, tr("apps", "Apps")))
+        if (weatherEnabled) add(CoachLine(CHEVRON_LEFT, tr("weather", "Wetter")))
         // The 1–9 badges read as mystery counts until someone says otherwise (SID-183) — one row,
         // only when a hardware tile is fitted, because on touch alone the badges never show.
-        if (quickLaunch) add(CoachLine(0f, "apps by number", badge = "1–9"))
+        if (quickLaunch) add(CoachLine(0f, tr("apps by number", "Apps per Ziffer"), badge = "1–9"))
     }
 
 /**
@@ -170,7 +171,7 @@ internal fun FirstRunCoach(
                 .padding(horizontal = 18.dp, vertical = 16.dp),
         ) {
             Text(
-                text = "Swipe to get around",
+                text = tr("Swipe to get around", "Wischen, um dich umzusehen"),
                 color = fg,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
@@ -200,7 +201,7 @@ internal fun FirstRunCoach(
                 Spacer(Modifier.height(11.dp))
             }
             Spacer(Modifier.height(3.dp))
-            Text(text = "Touch anywhere to begin", color = fg, fontSize = 12.sp)
+            Text(text = tr("Touch anywhere to begin", "Tippe irgendwo hin, um zu starten"), color = fg, fontSize = 12.sp)
         }
     }
 }

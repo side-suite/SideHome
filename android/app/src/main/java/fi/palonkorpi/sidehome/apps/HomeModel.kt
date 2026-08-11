@@ -1,5 +1,7 @@
 package fi.palonkorpi.sidehome.apps
 
+import fi.palonkorpi.sidehome.i18n.tr
+
 /**
  * The home page model: an ordered, capped list of apps and folders. Folders are a
  * launcher-owned construct (no system limit) — a named group of apps with one glyph,
@@ -36,7 +38,7 @@ fun List<HomeItem>.removeIndex(index: Int): List<HomeItem> =
  * What a folder is called when nothing better is known. [folderIdentityFor] decides when a
  * drag-combine can do better than this.
  */
-const val DEFAULT_FOLDER_NAME = "Folder"
+val DEFAULT_FOLDER_NAME: String get() = tr("Folder", "Ordner")
 const val DEFAULT_FOLDER_GLYPH = "folder"
 
 /**

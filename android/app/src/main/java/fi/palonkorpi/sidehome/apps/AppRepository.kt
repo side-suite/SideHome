@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import fi.palonkorpi.sidehome.i18n.tr
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -98,6 +99,7 @@ class AppRepository(private val context: Context) {
      * no name keyword still lands in Media → "music"). Games / unknown → null (no bucket).
      */
     private fun appInfoCategory(info: ApplicationInfo): BuiltInCategory? = when (info.category) {
+        ApplicationInfo.CATEGORY_GAME -> BuiltInCategory.GAMES
         ApplicationInfo.CATEGORY_AUDIO,
         ApplicationInfo.CATEGORY_VIDEO,
         ApplicationInfo.CATEGORY_IMAGE -> BuiltInCategory.MEDIA
@@ -105,7 +107,8 @@ class AppRepository(private val context: Context) {
         ApplicationInfo.CATEGORY_MAPS -> BuiltInCategory.WEB
         ApplicationInfo.CATEGORY_NEWS,
         ApplicationInfo.CATEGORY_PRODUCTIVITY -> BuiltInCategory.PRODUCTIVITY
-        else -> null
+        // Pre-category games set only the manifest's isGame flag; still a game.
+        else -> if ((info.flags and ApplicationInfo.FLAG_IS_GAME) != 0) BuiltInCategory.GAMES else null
     }
 
     // ---- persisted state ----
@@ -157,7 +160,7 @@ class AppRepository(private val context: Context) {
             (0 until arr.length()).mapNotNull { i ->
                 val o = arr.getJSONObject(i)
                 val id = o.optString("id").ifBlank { return@mapNotNull null }
-                Category(id, o.optString("label", "Category"), o.optString("glyph", "app"), builtIn = false)
+                Category(id, o.optString("label", tr("Category", "Kategorie")), o.optString("glyph", "app"), builtIn = false)
             }
         }.getOrElse { emptyList() }
     }
@@ -282,7 +285,7 @@ class AppRepository(private val context: Context) {
                 "folder" -> {
                     val a = o.optJSONArray("a") ?: JSONArray()
                     FolderItem(
-                        name = o.optString("n", "Folder"),
+                        name = o.optString("n", tr("Folder", "Ordner")),
                         appKeys = (0 until a.length()).map { a.getString(it) },
                         glyph = o.optString("g", "folder"),
                     )

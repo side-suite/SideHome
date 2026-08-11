@@ -1,5 +1,7 @@
 package fi.palonkorpi.sidehome.apps
 
+import fi.palonkorpi.sidehome.i18n.tr
+
 /**
  * A category an app can belong to, as it flows through resolution, grouping and the UI (SID-61).
  *
@@ -37,15 +39,19 @@ data class Category(
  * covers user-defined buckets (SID-61). The auto-resolver layers below are typed to this enum so a
  * user bucket can never be auto-assigned; it is only ever reached through an override.
  */
-enum class BuiltInCategory(val label: String, val glyph: String) {
-    COMMUNICATION("Communication", "chat"),
-    MEDIA("Media", "music"),
-    WEB("Web & Maps", "globe"),
-    PRODUCTIVITY("Productivity", "note"),
-    MONEY("Money", "card"),
-    HEALTH("Health & Fitness", "heart"),
-    UTILITIES("Utilities", "sliders"),
-    OTHER("Other", "app");
+enum class BuiltInCategory(private val labelEn: String, private val labelDe: String, val glyph: String) {
+    COMMUNICATION("Communication", "Kommunikation", "chat"),
+    MEDIA("Media", "Medien", "music"),
+    GAMES("Games", "Spiele", "gamepad"),
+    WEB("Web & Maps", "Web & Karten", "globe"),
+    PRODUCTIVITY("Productivity", "Produktivität", "note"),
+    MONEY("Money", "Finanzen", "card"),
+    HEALTH("Health & Fitness", "Gesundheit & Fitness", "heart"),
+    UTILITIES("Utilities", "Werkzeuge", "sliders"),
+    OTHER("Other", "Sonstiges", "app");
+
+    /** Display-only (identity is the enum [name]); resolved per access so a language switch shows. */
+    val label: String get() = tr(labelEn, labelDe)
 
     /** This built-in as a flowing [Category]. [Category.id] is the enum name — stable and persisted. */
     val category: Category get() = Category(name, label, glyph, builtIn = true)
@@ -95,6 +101,7 @@ object CategoryEngine {
         KeywordRule("heart", BuiltInCategory.HEALTH, listOf("health", "fit", "workout")),
         KeywordRule("book", BuiltInCategory.PRODUCTIVITY, listOf("book", "read", "news")),
         KeywordRule("sun", BuiltInCategory.UTILITIES, listOf("weather")),
+        KeywordRule("gamepad", BuiltInCategory.GAMES, listOf("game", "spiel", "puzzle", "sudoku", "chess", "dungeon", "arcade", "pinball", "minecraft")),
     )
 
     /** The one keyword rule this haystack matches, if any (first wins). */

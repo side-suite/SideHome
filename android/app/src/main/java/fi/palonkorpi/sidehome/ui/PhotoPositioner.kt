@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import fi.palonkorpi.sidehome.i18n.tr
 import fi.palonkorpi.sidehome.photo.clampFramePan
 import fi.palonkorpi.sidehome.photo.rotatedMinZoom
 
@@ -177,13 +178,16 @@ internal fun PhotoPositioner(
         ) {
             Column {
                 Text(
-                    "Position photo",
+                    tr("Position photo", "Foto ausrichten"),
                     color = Color.White,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                 )
                 Text(
-                    "Pinch to zoom or twist, drag to frame around the clock and apps",
+                    tr(
+                        "Pinch to zoom or twist, drag to frame around the clock and apps",
+                        "Mit zwei Fingern zoomen oder drehen, ziehen zum Einpassen um Uhr und Apps",
+                    ),
                     color = Color.White.copy(alpha = 0.85f),
                     fontSize = 12.sp,
                 )
@@ -201,7 +205,7 @@ internal fun PhotoPositioner(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Cancel",
+                text = tr("Cancel", "Abbrechen"),
                 color = Color.White,
                 fontSize = 15.sp,
                 modifier = Modifier
@@ -211,7 +215,7 @@ internal fun PhotoPositioner(
             )
             Spacer(Modifier.width(6.dp))
             Text(
-                text = "Use photo",
+                text = tr("Use photo", "Foto verwenden"),
                 color = accent,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,

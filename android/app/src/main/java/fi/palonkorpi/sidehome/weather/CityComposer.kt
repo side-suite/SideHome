@@ -1,5 +1,6 @@
 package fi.palonkorpi.sidehome.weather
 
+import fi.palonkorpi.sidehome.i18n.tr
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
@@ -108,7 +109,7 @@ fun CityComposer(
             .padding(start = 32.dp, end = 28.dp, top = 40.dp, bottom = 44.dp),
     ) {
         Text(
-            "Where are you?",
+            tr("Where are you?", "Wo bist du?"),
             color = fg,
             fontFamily = Inter,
             fontSize = 22.sp,
@@ -141,7 +142,7 @@ fun CityComposer(
                     Box(Modifier.weight(1f)) {
                         if (query.isEmpty()) {
                             Text(
-                                if (autoFocus) "Type a city" else "Tap, then type a city",
+                                if (autoFocus) tr("Type a city", "Stadt eintippen") else tr("Tap, then type a city", "Antippen, dann Stadt eintippen"),
                                 color = fg.copy(alpha = 0.6f),
                                 fontFamily = Inter,
                                 fontSize = 18.sp,
@@ -183,9 +184,12 @@ fun CityComposer(
         // tell those apart from here, and the user's next move ("check the spelling, or the network")
         // is the same either way.
         val status = when {
-            searching && results.isEmpty() -> "Searching…"
+            searching && results.isEmpty() -> tr("Searching…", "Suche…")
             query.trim().length >= MIN_QUERY && !searching && results.isEmpty() ->
-                "Nothing came back. Check the spelling — or whether you're online."
+                tr(
+                    "Nothing came back. Check the spelling — or whether you're online.",
+                    "Nichts gefunden. Prüf die Schreibweise — oder ob du online bist.",
+                )
             else -> null
         }
         if (status != null) {
@@ -201,7 +205,7 @@ fun CityComposer(
 
         Spacer(Modifier.height(18.dp))
         Text(
-            "Cancel",
+            tr("Cancel", "Abbrechen"),
             color = accent,
             fontFamily = Inter,
             fontSize = 15.sp,

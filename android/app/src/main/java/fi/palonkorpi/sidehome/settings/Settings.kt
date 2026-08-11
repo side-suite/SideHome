@@ -1,5 +1,7 @@
 package fi.palonkorpi.sidehome.settings
 
+import fi.palonkorpi.sidehome.i18n.tr
+
 /** How the home clock renders the time of day. */
 enum class ClockFormat { H24, H12 }
 
@@ -14,7 +16,7 @@ enum class ClockFormat { H24, H12 }
  * switch, so [granted] alone decides what the row says.
  */
 fun notificationAccessStatus(granted: Boolean): String =
-    if (granted) "On" else "Off — tap to enable"
+    if (granted) tr("On", "An") else tr("Off — tap to enable", "Aus — antippen")
 
 /**
  * Render an hour/minute pair as the home clock string. Pure — it takes no platform

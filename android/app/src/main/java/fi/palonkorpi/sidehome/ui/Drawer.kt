@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,6 +60,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.PlatformImeOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -122,6 +124,12 @@ private data class AppRow(val app: AppEntry) : DrawerItem
 fun Drawer(
     apps: List<AppEntry>,
     favouriteKeys: Set<String>,
+    // Hidden apps: never part of [apps] (the host filters them out), so they are absent from the
+    // A–Z list, the search ranking and the gallery buckets alike. They live only behind the locked
+    // "Hidden" row at the list's end; [onVerifyHiddenPin] checks the typed password against the
+    // stored hash. Empty list = feature dormant, the row simply isn't there.
+    hiddenApps: List<AppEntry> = emptyList(),
+    onVerifyHiddenPin: (String) -> Boolean = { false },
     fg: Color,
     accent: Color,
     backdrop: Color? = null,
@@ -162,6 +170,12 @@ fun Drawer(
 ) {
     var query by remember { mutableStateOf("") }
     val focus = remember { FocusRequester() }
+
+    // The hidden area's session state. Unlock lasts only while the drawer is up — [atRest] relocks,
+    // so every fresh summon asks for the password again. Nothing here persists.
+    var pinPromptOpen by remember { mutableStateOf(false) }
+    var hiddenOpen by remember { mutableStateOf(false) }
+    var hiddenUnlocked by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     val listState = rememberLazyListState()
@@ -247,6 +261,9 @@ fun Drawer(
         if (atRest) {
             query = ""
             onOpenCategoryChange(null)
+            pinPromptOpen = false
+            hiddenOpen = false
+            hiddenUnlocked = false
             listState.scrollToItem(0)
             runCatching { gridScroll.scrollTo(0) }
         }
@@ -257,7 +274,8 @@ fun Drawer(
     val hint = fg.copy(alpha = 0.22f)
 
     val buckets = remember(apps) { bucketApps(apps) }
-    val appsByKey = remember(apps) { apps.associateBy { it.key } }
+    // Includes the hidden apps: the hidden popover resolves its members through this map too.
+    val appsByKey = remember(apps, hiddenApps) { (apps + hiddenApps).associateBy { it.key } }
     // Which bucket's popover is open, matched on id (not the whole [Category]): a bucket's label/glyph
     // can be edited (user buckets) or its members change while it is open, and only the id is stable.
     // Gated on `grouped` in composition, not just cleared by the effect below, so flipping to List with
@@ -391,6 +409,12 @@ fun Drawer(
     // then, and the host's chain — which cannot see this state — is left alone otherwise.
     BackHandler(enabled = openCategory != null) { onOpenCategoryChange(null) }
 
+    // Same rule for the hidden area's two surfaces: Back steps out of them before the drawer closes.
+    BackHandler(enabled = pinPromptOpen || hiddenOpen) {
+        pinPromptOpen = false
+        hiddenOpen = false
+    }
+
     // The swipe-down dismissal reads this from inside a pointerInput that never restarts, so it would
     // otherwise capture the mode the drawer opened in and never see a flip.
     val groupedNow by rememberUpdatedState(grouped)
@@ -409,8 +433,35 @@ fun Drawer(
         // says stacked overlays don't bleed — you only ever read one surface — and here the surface
         // underneath is a grid of bubbles the popover is the drill-down *into*, so leaving it showing
         // would be the loudest possible version of that bleed. The drawer itself stays open behind
-        // the swap; dismissing the bucket returns to the bubbles.
-        if (openBucket != null) {
+        // the swap; dismissing the bucket returns to the bubbles. The hidden area's two surfaces
+        // (password prompt, then the hidden popover) swap in the same way, and take precedence.
+        if (pinPromptOpen) {
+            HiddenPinPrompt(
+                fg = fg,
+                accent = accent,
+                onVerify = onVerifyHiddenPin,
+                onSuccess = {
+                    pinPromptOpen = false
+                    hiddenUnlocked = true
+                    hiddenOpen = true
+                },
+                onDismiss = { pinPromptOpen = false },
+            )
+        } else if (hiddenOpen && hiddenApps.isNotEmpty()) {
+            CategoryPopover(
+                bucket = remember(hiddenApps) {
+                    CategoryBucket(Category("hidden", tr("Hidden", "Versteckt"), "lock", builtIn = true), hiddenApps)
+                },
+                appsByKey = appsByKey,
+                tuning = tuning,
+                fg = fg,
+                accent = accent,
+                selectedIndex = null,
+                onLaunch = onLaunch,
+                onAppHold = onAppHold,
+                onDismiss = { hiddenOpen = false },
+            )
+        } else if (openBucket != null) {
             CategoryPopover(
                 bucket = openBucket,
                 appsByKey = appsByKey,
@@ -605,6 +656,27 @@ fun Drawer(
                         )
                     }
                 }
+                // The hidden area's one visible trace: a quiet lock row after Z. Browsing only —
+                // while searching the list is ranked results and the row would be noise there.
+                // Absent entirely while nothing is hidden.
+                if (hiddenApps.isNotEmpty() && !searching) {
+                    item(key = "hidden_row") {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable {
+                                    if (hiddenUnlocked) hiddenOpen = true else pinPromptOpen = true
+                                }
+                                .padding(horizontal = 8.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            LineIcon(glyph = "lock", color = fg, size = 24.dp, strokeWidthUnits = 1.6f)
+                            Spacer(Modifier.width(15.dp))
+                            Text(text = tr("Hidden", "Versteckt"), color = fg, fontSize = 18.sp)
+                        }
+                    }
+                }
             }
             }
             }
@@ -685,6 +757,106 @@ private fun CategoryPopover(
         // reads as the bucket opening rather than a different, line-art set of apps.
         realIcons = true,
     )
+}
+
+/**
+ * The hidden area's gate: one password field, a quiet wrong-password line, and Cancel. Replaces the
+ * drawer's content like every other surface swap here — no dialog chrome, no dimmed layer. The
+ * field auto-focuses when a hardware tile is present (the drawer's own rule), so the password can
+ * be typed with no extra tap; a wrong entry clears the field and says so, never locks anyone out.
+ */
+@Composable
+private fun HiddenPinPrompt(
+    fg: Color,
+    accent: Color,
+    onVerify: (String) -> Boolean,
+    onSuccess: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var pin by remember { mutableStateOf("") }
+    var wrong by remember { mutableStateOf(false) }
+    val focus = remember { FocusRequester() }
+    val configuration = LocalConfiguration.current
+    val hardwareKeys = configuration.keyboard == Configuration.KEYBOARD_QWERTY &&
+        configuration.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO
+    LaunchedEffect(Unit) { if (hardwareKeys) runCatching { focus.requestFocus() } }
+
+    fun submit() {
+        if (onVerify(pin)) onSuccess() else { wrong = true; pin = "" }
+    }
+
+    val rule = fg.copy(alpha = 0.22f)
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(start = 32.dp, end = 28.dp, top = 48.dp, bottom = 44.dp),
+    ) {
+        Text(
+            tr("Hidden apps", "Versteckte Apps"),
+            color = fg,
+            fontFamily = Inter,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Light,
+        )
+        Spacer(Modifier.height(14.dp))
+        BasicTextField(
+            value = pin,
+            onValueChange = { pin = it; wrong = false },
+            singleLine = true,
+            textStyle = TextStyle(color = fg, fontSize = 18.sp, fontFamily = Inter),
+            cursorBrush = SolidColor(accent),
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { submit() }),
+            modifier = Modifier
+                .focusRequester(focus)
+                .fillMaxWidth()
+                .padding(vertical = 8.dp, horizontal = 2.dp)
+                .drawBehind {
+                    val y = size.height
+                    drawLine(rule, Offset(0f, y), Offset(size.width, y), strokeWidth = 1.5f)
+                },
+            decorationBox = { innerTextField ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    LineIcon(glyph = "lock", color = fg, size = 20.dp, strokeWidthUnits = 1.7f)
+                    Spacer(Modifier.width(10.dp))
+                    Box(Modifier.weight(1f)) {
+                        if (pin.isEmpty()) {
+                            Text(
+                                tr("Password", "Passwort"),
+                                color = fg.copy(alpha = 0.6f),
+                                fontFamily = Inter,
+                                fontSize = 18.sp,
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
+            },
+        )
+        if (wrong) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                tr("Wrong password", "Falsches Passwort"),
+                color = accent,
+                fontFamily = Inter,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+            )
+        }
+        Spacer(Modifier.height(18.dp))
+        Text(
+            tr("Cancel", "Abbrechen"),
+            color = accent,
+            fontFamily = Inter,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onDismiss)
+                .padding(vertical = 6.dp, horizontal = 2.dp),
+        )
+    }
 }
 
 @Composable

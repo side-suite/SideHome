@@ -158,6 +158,9 @@ fun GlanceWeather(fg: Color, modifier: Modifier = Modifier) {
             color = fg,
             fontSize = HomeMetrics.DateSp.sp,
             fontWeight = FontWeight.Normal,
+            // A temperature never breaks across lines: squeezed, it once wrapped a digit per line.
+            maxLines = 1,
+            softWrap = false,
         )
     }
 }

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,7 +48,6 @@ import fi.palonkorpi.sidehome.gesture.GestureTuning
 import fi.palonkorpi.sidehome.settings.ClockFormat
 import fi.palonkorpi.sidehome.settings.formatClock
 import java.time.LocalDateTime
-import java.time.format.TextStyle
 import java.util.Locale
 
 /**
@@ -151,10 +151,9 @@ internal fun HomePage(
     attachDrag: Boolean = true,
 ) {
     val timeStr = formatClock(clock.hour, clock.minute, clockFormat)
-    val dow = clock.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
-        .replaceFirstChar { it.titlecase(Locale.getDefault()) }
-    val month = clock.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
-    val dateStr = "$dow, ${clock.dayOfMonth} $month"
+    val dateLabels = remember(clock.toLocalDate(), Locale.getDefault()) {
+        homeDateLabels(clock.dayOfWeek, clock.dayOfMonth, clock.month, Locale.getDefault())
+    }
 
     // Notification dots (SID-46). Read from the process-wide badge source rather than threaded down
     // from MainActivity: a dot belongs to the *package*, so the same app lights on its home tile and
@@ -268,12 +267,20 @@ internal fun HomePage(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.then(rememberStaggeredEnter(index = 1, leadMs = lead)),
                 ) {
-                    Text(
-                        text = dateStr,
-                        color = fg,
-                        fontSize = HomeMetrics.DateSp.sp,
-                        fontWeight = FontWeight.Normal,
-                        letterSpacing = 0.01.em,
+                    // weight(fill = false) makes the Row measure the glance first, so the date is
+                    // what yields on a long day/month pair — it steps down to a shorter form rather
+                    // than squeezing the glance until its number wraps a digit per line.
+                    HomeDate(
+                        labels = dateLabels,
+                        style = LocalTextStyle.current.merge(
+                            UiTextStyle(
+                                color = fg,
+                                fontSize = HomeMetrics.DateSp.sp,
+                                fontWeight = FontWeight.Normal,
+                                letterSpacing = 0.01.em,
+                            ),
+                        ),
+                        modifier = Modifier.weight(1f, fill = false),
                     )
                     GlanceWeather(fg = fg)
                 }

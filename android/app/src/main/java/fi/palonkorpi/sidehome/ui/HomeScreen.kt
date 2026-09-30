@@ -1866,11 +1866,8 @@ fun SideHomeApp(
                 // and its date is HomePage's own wording, so the skeleton being framed against is
                 // the one that will actually stand on the photo.
                 val ghostDate = remember(clock.dayOfMonth) {
-                    val dow = clock.dayOfWeek
-                        .getDisplayName(java.time.format.TextStyle.FULL, Locale.getDefault())
-                        .replaceFirstChar { it.titlecase(Locale.getDefault()) }
-                    val month = clock.month.getDisplayName(java.time.format.TextStyle.FULL, Locale.getDefault())
-                    "$dow, ${clock.dayOfMonth} $month"
+                    // The ghost has no weather beside it, so the full form always fits.
+                    homeDateLabels(clock.dayOfWeek, clock.dayOfMonth, clock.month, Locale.getDefault()).first()
                 }
                 val ghostItems = remember(home, appsByKey) {
                     home.mapNotNull { item ->
